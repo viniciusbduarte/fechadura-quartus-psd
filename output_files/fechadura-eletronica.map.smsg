@@ -1,0 +1,1 @@
+Warning (10268): Verilog HDL information at setup.sv(71): always construct contains both blocking and non-blocking assignments File: C:/Users/Vinicius Duarte/Documents/repositorios/fechadura-quartus-psd/setup.sv Line: 71

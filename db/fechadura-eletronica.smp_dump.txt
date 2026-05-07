@@ -1,0 +1,26 @@
+
+State Machine - |DE1_SOC_golden_top|decodificador_de_teclado:my_teclado|state
+Name state.ST_CLEAR state.ST_TIMEOUT_PULSE state.ST_VALID_PULSE state.ST_HOLD state.ST_PROCESS state.ST_DEBOUNCE state.ST_SCAN state.ST_INIT 
+state.ST_INIT 0 0 0 0 0 0 0 0 
+state.ST_SCAN 0 0 0 0 0 0 1 1 
+state.ST_DEBOUNCE 0 0 0 0 0 1 0 1 
+state.ST_PROCESS 0 0 0 0 1 0 0 1 
+state.ST_HOLD 0 0 0 1 0 0 0 1 
+state.ST_VALID_PULSE 0 0 1 0 0 0 0 1 
+state.ST_TIMEOUT_PULSE 0 1 0 0 0 0 0 1 
+state.ST_CLEAR 1 0 0 0 0 0 0 1 
+
+State Machine - |DE1_SOC_golden_top|setup:my_setup|state
+Name state.ST_COMMIT state.ST_MENU_EXIT_09 state.ST_MENU_PASS_4_08 state.ST_MENU_PASS_3_07 state.ST_MENU_PASS_2_06 state.ST_MENU_PASS_1_05 state.ST_MENU_PASS_M_04 state.ST_MENU_T_LOCK_03 state.ST_MENU_T_BIP_02 state.ST_MENU_BIP_01 state.ST_QUAL_MENU_00 state.ST_IDLE 
+state.ST_IDLE 0 0 0 0 0 0 0 0 0 0 0 0 
+state.ST_QUAL_MENU_00 0 0 0 0 0 0 0 0 0 0 1 1 
+state.ST_MENU_BIP_01 0 0 0 0 0 0 0 0 0 1 0 1 
+state.ST_MENU_T_BIP_02 0 0 0 0 0 0 0 0 1 0 0 1 
+state.ST_MENU_T_LOCK_03 0 0 0 0 0 0 0 1 0 0 0 1 
+state.ST_MENU_PASS_M_04 0 0 0 0 0 0 1 0 0 0 0 1 
+state.ST_MENU_PASS_1_05 0 0 0 0 0 1 0 0 0 0 0 1 
+state.ST_MENU_PASS_2_06 0 0 0 0 1 0 0 0 0 0 0 1 
+state.ST_MENU_PASS_3_07 0 0 0 1 0 0 0 0 0 0 0 1 
+state.ST_MENU_PASS_4_08 0 0 1 0 0 0 0 0 0 0 0 1 
+state.ST_MENU_EXIT_09 0 1 0 0 0 0 0 0 0 0 0 1 
+state.ST_COMMIT 1 0 0 0 0 0 0 0 0 0 0 1 
