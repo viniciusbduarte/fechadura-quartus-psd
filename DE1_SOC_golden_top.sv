@@ -300,7 +300,7 @@ assign LEDR[0] = SW_0;
 logic [4:0] bcd_mux0, bcd_mux1, bcd_mux2, bcd_mux3, bcd_mux4, bcd_mux5;
 
 always_comb begin
-    if (SW_1) begin 
+    if (SW_0) begin 
         // Injeta 12 ( que no modulo sement7 está como tudo em 1, limpando os sementos) para os 4 primeiros dígitos, indicando que o display está em modo de configuração
         bcd_mux0 = 4'd12; 
         bcd_mux1 = 4'd12;

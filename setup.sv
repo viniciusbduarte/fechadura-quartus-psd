@@ -45,6 +45,7 @@ module setup (
     state_t state;            // Registrador que armazena o estado atual da FSM
     setupPac_t draft_config;  // Registrador temporário (rascunho) para guardar dados modificados localmente
     logic [3:0] current_menu; // Armazena o índice do menu atual (00 a 09) para amostragem no display
+	 logic [7:0] val; 			// Armazena valor de tempo para o menu 02 e 03
 
     // ==========================================
     // DEFINIÇÕES DE VALORES ESPECIAIS DO TECLADO
@@ -155,7 +156,7 @@ module setup (
                         end
                         else begin
                             // Converte a dezena e unidade contidas nos últimos dígitos do pacote para formato inteiro
-                            automatic logic [7:0] val = (digitos_value.digits[1] * 10) + digitos_value.digits[0];
+                            val = (digitos_value.digits[1] * 10) + digitos_value.digits[0];
                             // Saturação por hardware para blindar os limites físicos aceitáveis do contador
                             if (val < 8'd5)  val = 8'd5;
                             if (val > 8'd60) val = 8'd60;
@@ -175,7 +176,7 @@ module setup (
                         end
                         else begin
                             // Realiza o cálculo de conversão BCD para Decimal baseado no barramento atual
-                            automatic logic [7:0] val = (digitos_value.digits[1] * 10) + digitos_value.digits[0];
+                            val = (digitos_value.digits[1] * 10) + digitos_value.digits[0];
                             if (val < 8'd5)  val = 8'd5;
                             if (val > 8'd60) val = 8'd60;
 
