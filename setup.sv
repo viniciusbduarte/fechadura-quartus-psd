@@ -12,7 +12,7 @@ module setup (
     input  logic         setup_on,         // Sinal de habilitação: bloco opera apenas em '1'
     
     // --- Interface com Módulo Teclado ---
-    input  senhaPac_t    digitos_value,    // Estrutura packed com os dígitos contidos no barramento
+    input  digitosPac_t    digitos_value,    // Estrutura packed com os dígitos contidos no barramento
     input  logic         digitos_valid,    // Pulso (1 ciclo) indicando nova atividade/evento no teclado
     
     // --- Interface com Displays de 7 Segmentos ---

@@ -9,7 +9,7 @@ module decodificador_de_teclado (
     input  logic         enable,        // Habilita ou desabilita o módulo 
     input  logic [3:0]   col_matriz,    // Identifica as colunas do teclado 
     output logic [3:0]   lin_matriz,    // Controla as linhas do teclado 
-    output var senhaPac_t digitos_value, // Vetor de saída com os 20 dígitos
+    output var digitosPac_t digitos_value, // Vetor de saída com os 20 dígitos
     output logic         digitos_valid  // Indica que os dados estão prontos
 );
 
