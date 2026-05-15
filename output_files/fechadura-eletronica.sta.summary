@@ -2,100 +2,84 @@
 Timing Analyzer Summary
 ------------------------------------------------------------
 
-Type  : Slow 1100mV 85C Model Setup 'CLOCK_50'
-Slack : -5.333
-TNS   : -108.070
-
-Type  : Slow 1100mV 85C Model Setup 'divfreq:my_div|clk_i'
-Slack : -3.677
-TNS   : -460.441
-
-Type  : Slow 1100mV 85C Model Hold 'divfreq:my_div|clk_i'
-Slack : 0.223
+Type  : Slow 1100mV 85C Model Setup 'altera_reserved_tck'
+Slack : 8.961
 TNS   : 0.000
 
-Type  : Slow 1100mV 85C Model Hold 'CLOCK_50'
-Slack : 0.383
+Type  : Slow 1100mV 85C Model Hold 'altera_reserved_tck'
+Slack : 0.407
 TNS   : 0.000
 
-Type  : Slow 1100mV 85C Model Minimum Pulse Width 'CLOCK_50'
-Slack : -0.714
-TNS   : -27.860
-
-Type  : Slow 1100mV 85C Model Minimum Pulse Width 'divfreq:my_div|clk_i'
-Slack : -0.394
-TNS   : -111.697
-
-Type  : Slow 1100mV 0C Model Setup 'CLOCK_50'
-Slack : -5.389
-TNS   : -105.187
-
-Type  : Slow 1100mV 0C Model Setup 'divfreq:my_div|clk_i'
-Slack : -3.819
-TNS   : -454.901
-
-Type  : Slow 1100mV 0C Model Hold 'divfreq:my_div|clk_i'
-Slack : 0.207
+Type  : Slow 1100mV 85C Model Recovery 'altera_reserved_tck'
+Slack : 27.142
 TNS   : 0.000
 
-Type  : Slow 1100mV 0C Model Hold 'CLOCK_50'
-Slack : 0.378
+Type  : Slow 1100mV 85C Model Removal 'altera_reserved_tck'
+Slack : 0.968
 TNS   : 0.000
 
-Type  : Slow 1100mV 0C Model Minimum Pulse Width 'CLOCK_50'
-Slack : -0.729
-TNS   : -25.815
-
-Type  : Slow 1100mV 0C Model Minimum Pulse Width 'divfreq:my_div|clk_i'
-Slack : -0.394
-TNS   : -108.727
-
-Type  : Fast 1100mV 85C Model Setup 'CLOCK_50'
-Slack : -3.054
-TNS   : -47.144
-
-Type  : Fast 1100mV 85C Model Setup 'divfreq:my_div|clk_i'
-Slack : -1.776
-TNS   : -209.696
-
-Type  : Fast 1100mV 85C Model Hold 'divfreq:my_div|clk_i'
-Slack : 0.072
+Type  : Slow 1100mV 85C Model Minimum Pulse Width 'altera_reserved_tck'
+Slack : 15.030
 TNS   : 0.000
 
-Type  : Fast 1100mV 85C Model Hold 'CLOCK_50'
-Slack : 0.203
+Type  : Slow 1100mV 0C Model Setup 'altera_reserved_tck'
+Slack : 9.148
 TNS   : 0.000
 
-Type  : Fast 1100mV 85C Model Minimum Pulse Width 'CLOCK_50'
-Slack : -0.775
-TNS   : -19.505
-
-Type  : Fast 1100mV 85C Model Minimum Pulse Width 'divfreq:my_div|clk_i'
-Slack : -0.054
-TNS   : -1.151
-
-Type  : Fast 1100mV 0C Model Setup 'CLOCK_50'
-Slack : -2.739
-TNS   : -40.183
-
-Type  : Fast 1100mV 0C Model Setup 'divfreq:my_div|clk_i'
-Slack : -1.556
-TNS   : -185.769
-
-Type  : Fast 1100mV 0C Model Hold 'divfreq:my_div|clk_i'
-Slack : 0.054
+Type  : Slow 1100mV 0C Model Hold 'altera_reserved_tck'
+Slack : 0.397
 TNS   : 0.000
 
-Type  : Fast 1100mV 0C Model Hold 'CLOCK_50'
-Slack : 0.191
+Type  : Slow 1100mV 0C Model Recovery 'altera_reserved_tck'
+Slack : 27.376
 TNS   : 0.000
 
-Type  : Fast 1100mV 0C Model Minimum Pulse Width 'CLOCK_50'
-Slack : -0.796
-TNS   : -23.165
+Type  : Slow 1100mV 0C Model Removal 'altera_reserved_tck'
+Slack : 0.842
+TNS   : 0.000
 
-Type  : Fast 1100mV 0C Model Minimum Pulse Width 'divfreq:my_div|clk_i'
-Slack : 0.001
+Type  : Slow 1100mV 0C Model Minimum Pulse Width 'altera_reserved_tck'
+Slack : 14.989
+TNS   : 0.000
+
+Type  : Fast 1100mV 85C Model Setup 'altera_reserved_tck'
+Slack : 12.193
+TNS   : 0.000
+
+Type  : Fast 1100mV 85C Model Hold 'altera_reserved_tck'
+Slack : 0.174
+TNS   : 0.000
+
+Type  : Fast 1100mV 85C Model Recovery 'altera_reserved_tck'
+Slack : 28.861
+TNS   : 0.000
+
+Type  : Fast 1100mV 85C Model Removal 'altera_reserved_tck'
+Slack : 0.447
+TNS   : 0.000
+
+Type  : Fast 1100mV 85C Model Minimum Pulse Width 'altera_reserved_tck'
+Slack : 14.715
+TNS   : 0.000
+
+Type  : Fast 1100mV 0C Model Setup 'altera_reserved_tck'
+Slack : 12.747
+TNS   : 0.000
+
+Type  : Fast 1100mV 0C Model Hold 'altera_reserved_tck'
+Slack : 0.155
+TNS   : 0.000
+
+Type  : Fast 1100mV 0C Model Recovery 'altera_reserved_tck'
+Slack : 29.390
+TNS   : 0.000
+
+Type  : Fast 1100mV 0C Model Removal 'altera_reserved_tck'
+Slack : 0.347
+TNS   : 0.000
+
+Type  : Fast 1100mV 0C Model Minimum Pulse Width 'altera_reserved_tck'
+Slack : 14.691
 TNS   : 0.000
 
 ------------------------------------------------------------

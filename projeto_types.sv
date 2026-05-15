@@ -9,8 +9,13 @@ package projeto_types;
     } bcdPac_t;
 
     typedef struct packed {
-        logic [19:0][3:0] digits;
+        logic [11:0][3:0] digits;
     } senhaPac_t;
+	 
+	typedef struct packed {
+        logic [19:0][3:0] digits;
+    } digitosPac_t;
+
 
     typedef struct packed {
         logic        bip_status;
