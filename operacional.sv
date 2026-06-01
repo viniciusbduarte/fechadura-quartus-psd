@@ -44,9 +44,26 @@ module operacional(
 
     state_t state;            // Registrador que armazena o estado atual da FSM
     setupPac_t draft_config;  // Registrador temporário (rascunho) para guardar dados recebidos pelo data_setup_new
-    logic        timer_tranca_aut_done; // Sinal que avisa a FSM que o tempo acabou
-    logic        timer_tranca_en;   // Sinal que a FSM usa para ligar o timer
-    logic [12:0] counter_aut_lock;  // Contador de ciclos
+
+    // Novas variáveis do Temporizador Genérico, temporizador adaptado para uso de um unico registrador para 
+    //todos os estados que usam temporizador, mas se necessário podemos fazer varios always_ff para cada estado
+    //que utiluza temporizador, o que acha? @vinicius
+    // timer_limit: É uma saída da sua FSM. Ela diz ao contador genérico: "Ei, conte exatamente até ESSE valor!". 
+    // Em vez de ser um tempo fixo, a FSM escolhe na hora se quer 3000 ciclos (3 segundos) ou 5000 ciclos (5 segundos).
+
+    // timer_en: É uma saída da sua FSM (controlada dentro do case). Ela diz ao contador: "Ei, comece a contar agora!". 
+    // Enquanto estiver em '1', o contador sobe. Se a FSM colocar em '0', o contador para e zera imediatamente.
+
+    // timer_done: É uma entrada para a sua FSM (o contador responde para a FSM). A FSM fica "olhando" para esse sinal 
+    // dentro de estados como ST_CLOSED_UNLOCKED ou ST_CLOSED_LOCKED. Quando ele virar '1', a FSM sabe que o tempo 
+    // que ela pediu no timer_limit acabou, e então ela executa a mudança de estado.
+
+    // counter_gen: (Extra) É a variável interna do bloco always_ff do temporizador. É o cronômetro físico em si. 
+    // A FSM nunca precisa olhar para ele diretamente, ela só olha para o "timer_done".
+    logic [12:0] timer_limit;  // A FSM diz qual é o limite (3000 ou 5000)
+    logic        timer_en;     // A FSM manda ligar
+    logic        timer_done;   // O contador avisa que acabou
+    logic [12:0] counter_gen;  // O contador em si
      
 
     // ==========================================
@@ -71,7 +88,7 @@ module operacional(
     logic [2:0] tentativas_falhas; // Conta até 7, suficiente para o limite de erros
 
     //Nota: O código do assign acima é conceitual. Você precisará ajustar os nomes exatos de .senha_master, etc.,
-    // conforme definidos dentro da sua struct setupPac_t,quais são esses nomes??
+    // conforme definidos dentro da sua struct setupPac_t,quais são esses nomes?? @vinicius
 
 //timer_tranca_en: É uma saída da sua FSM (controlada dentro do case). Ela diz ao contador: "Ei, comece a contar agora!".
 
@@ -80,23 +97,29 @@ module operacional(
 //timer_tranca_aut_done: É uma entrada para a sua FSM. A FSM fica "olhando" para esse sinal dentro do estado 
 //ST_CLOSED_UNLOCKED. Quando ele virar 1, a FSM sabe que é hora de mudar de estado e pular para o ST_CLOSED_LOCKED.
 
+    // ÚNICO bloco contador do sistema
     always_ff @(posedge clk) begin
         if (rst) begin
-            counter_aut_lock      <= '0;
-            timer_tranca_aut_done <= 1'b0;
+            state             <= ST_RESET_TOTAL; // Agora o ponto de partida é aqui!
+            tentativas_falhas <= '0;
+            timer_en          <= 1'b0;
+            tranca            <= 1'b1;           // Inicia trancada por segurança
+            counter_gen <= '0;
+            timer_done  <= 1'b0;
+        //end else if (rst_parcial) begin
+        //    state <= ST_RESET_PARCIAL; //esse bloco se faz necessário? @vinicius
         end else begin
-            if (timer_tranca_en) begin
-                // 5000 ciclos = 5 segundos a 1kHz
-                if (counter_aut_lock >= 13'd5000) begin 
-                    timer_tranca_aut_done <= 1'b1;
+            if (timer_en) begin
+                if (counter_gen >= timer_limit) begin 
+                    timer_done <= 1'b1; // Bateu no limite que a FSM escolheu!
                 end else begin
-                    counter_aut_lock      <= counter_aut_lock + 1'b1;
-                    timer_tranca_aut_done <= 1'b0;
+                    counter_gen <= counter_gen + 1'b1;
+                    timer_done  <= 1'b0;
                 end
             end else begin
-                // Se o timer não está habilitado, zera tudo
-                counter_aut_lock      <= '0;
-                timer_tranca_aut_done <= 1'b0;
+                // Se o timer for desligado pela FSM, limpa os registradores
+                counter_gen <= '0;
+                timer_done  <= 1'b0;
             end
         end
     end
@@ -129,74 +152,59 @@ module operacional(
                 
                 // ESTADO PORTA FECHADA E TRANCADA
                 ST_CLOSED_LOCKED: begin
-                    // 1. Manutenção das Saídas (Garantindo o estado seguro)
-                    tranca     <= 1'b1; // Tranca fechada 
-                    teclado_en <= 1'b1; // Teclado habilitado aguardando senha
-                    display_en <= 1'b0; // Displays apagados em operação normal
-                    bip        <= 1'b0; // Bip desativado
-                    setup_on   <= 1'b0; // Setup não pode ser ativado com porta fechada/trancada
+                    tranca     <= 1'b1; 
+                    teclado_en <= 1'b1; 
+                    display_en <= 1'b0; 
+                    bip        <= 1'b0; 
+                    setup_on   <= 1'b0; 
 
-                    // 2. Análise de Transições (Prioridade de roteamento)
-                    
-                    // Prioridade 1: Botão interno (Saída rápida)
-                    if (botao_interno) begin
-                        tranca <= 1'b0; // Abre a tranca imediatamente 
-                        state  <= ST_CLOSED_UNLOCKED; 
-                    end
-                    
-                    // Prioridade 2: Ativação do "Não Perturbe"
-                    // Nota: Recomenda-se um contador paralelo (ex: timer_3s_done) para medir os 3 seg.
-                    else if (botao_bloqueio && timer_3s_done) begin
-                        state <= ST_BLOCK_OUTSIDE; // Muda para o estado que ignora o teclado externo
-                    end
-                    
-                    // Prioridade 3: Usuário digitando no teclado
-                    else if (digitos_valid) begin
-                        // O sistema recebeu uma entrada válida do teclado 
-                        // Se a tecla '*' for pressionada (depende de como o teclado sinaliza o fim),
-                        // ou se o sistema deve validar a cada tecla inserida, vamos para a verificação.
-                        state <= ST_VERIFY; // Vai para o estado que processa e valida a senha 
-                    end
-                    
-                    // Prioridade 4 (Opcional, mas boa prática): Detecção de violação
-                    else if (sensor_contato == 1'b0) begin
-                        // Porta violada! Aqui poderia ir para um ST_ALARM, mas como não 
-                        // está explícito, mantemos monitoramento.
-                        // Se o sensor indicar que a porta abriu sem a tranca destravar
+                    // Lógica do Botão de Bloqueio (Não Perturbe - 3 segundos)
+                    if (botao_bloqueio) begin
+                        timer_limit <= 13'd3000; // Define o limite para 3 segundos (3000 ciclos a 1kHz)
+                        timer_en    <= 1'b1;    // Manda o timer começar a contar
+                        
+                        if (timer_done) begin
+                            timer_en <= 1'b0;            // Desliga o timer antes de mudar de estado
+                            state    <= ST_BLOCK_OUTSIDE; // Vai para o modo Não Perturbe
+                        end
+                    end else begin
+                        // Se o usuário não está apertando o botão (ou soltou no meio do caminho), garante o timer desligado
+                        timer_en <= 1'b0;
+                        
+                        // Mantém as outras transições normais do estado...
+                        if (botao_interno) begin
+                            state <= ST_CLOSED_UNLOCKED;
+                        end 
+                        else if (digitos_valid) begin
+                            state <= ST_VERIFY;
+                        end
                     end
                 end
 
                 ST_CLOSED_UNLOCKED: begin
-                    // 1. Configuração das Saídas para o Estado Destravado
-                    tranca         <= 1'b0; // Destrava o mecanismo físico
-                    teclado_en     <= 1'b0; // Desabilita o teclado (operação de entrada concluída)
-                    display_en     <= 1'b1; // Ativa display (pode mostrar que a porta está aberta/livre)
-                    bip            <= 1'b0;
-                    setup_on       <= 1'b0;
+                    tranca     <= 1'b0; // Destrava a porta
+                    teclado_en <= 1'b0; 
+                    display_en <= 1'b1; 
+                    bip        <= 1'b0;
+                    setup_on   <= 1'b0;
 
-                    // Habilita o temporizador de travamento automático apenas enquanto estiver neste estado
-                    timer_tranca_en <= 1'b1; 
+                    // Configura o timer para o Travamento Automático (5 segundos)
+                    timer_limit <= 13'd5000; // Define o limite para 5 segundos (5000 ciclos a 1kHz)
+                    timer_en    <= 1'b1;    // Ativa a contagem
 
-                    // 2. Lógica de Transições de Estado (Prioridade)
-
-                    // Regra 1: Se a porta for aberta fisicamente
-                    // (Considerando que sensor_contato == 1'b1 significa FECHADA e 1'b0 significa ABERTA)
-                    if (sensor_contato == 1'b0) begin
-                        timer_tranca_en <= 1'b0; // Desliga o timer de travamento
-                        state           <= ST_OPEN; // Vai para o estado de monitoramento de porta aberta
+                    // Transições
+                    if (sensor_contato == 1'b0) begin // Se a porta abrir fisicamente
+                        timer_en <= 1'b0; // Desliga o timer imediatamente
+                        state    <= ST_OPEN;
                     end
-
-                    // Regra 2: Se o botão de configuração for pressionado
                     else if (botao_config) begin
-                        timer_tranca_en <= 1'b0;
-                        setup_on        <= 1'b1; // Ativa o módulo de Setup
-                        state           <= ST_SETUP_MODE; // Transiciona para o estado gerenciado pelo Setup
+                        timer_en <= 1'b0;
+                        setup_on <= 1'b1;
+                        state    <= ST_SETUP_MODE;
                     end
-
-                    // Regra 3: O usuário não abriu a porta e o tempo de travamento automático acabou
-                    else if (timer_tranca_aut_done) begin
-                        timer_tranca_en <= 1'b0;
-                        state           <= ST_CLOSED_LOCKED; // Tranca novamente de forma automática
+                    else if (timer_done) begin // Se os 5 segundos acabarem e a porta continuar fechada
+                        timer_en <= 1'b0; // Desliga o timer
+                        state    <= ST_CLOSED_LOCKED; // Tranca a porta novamente
                     end
                 end
 
@@ -207,6 +215,8 @@ module operacional(
                     display_en      <= 1'b1; // Display ativo (pode exibir um indicativo visual)
                     bip             <= 1'b0;
                     setup_on        <= 1'b0;
+                    //Garante que o timer genérico fique desligado enquanto a porta estiver aberta!
+                    timer_en   <= 1'b0;
                     
                     // DESLIGA o timer de travamento automático! 
                     // Ele só deve contar quando a porta estiver fechada.
@@ -237,6 +247,8 @@ module operacional(
                     teclado_en <= 1'b0; // Pausa a leitura do teclado
                     bip        <= 1'b0;
                     setup_on   <= 1'b0;
+                    // NOVO: Garante timer desligado
+                    timer_en   <= 1'b0;
 
                     // 2. Lógica de Decisão
                     if (senha_correta) begin
@@ -258,53 +270,82 @@ module operacional(
                     end
                 end
 
-                // --- MENU 04: CONFIGURAÇÃO DE SENHA MASTER ---
-                ST_MENU_PASS_M_04: begin
-                    current_menu <= 4'd4; // Atualiza display para mostrar "04"
-                    if (digitos_valid && (digitos_value.digits[0] != EVT_TIMEOUT)) begin
-                        if (digitos_value.digits[0] == KEY_HASH) begin
-                            state <= ST_MENU_EXIT_09; // Aborta de imediato indo para o Menu 09
+                ST_BLOCK_OUTSIDE: begin
+                    tranca     <= 1'b1; 
+                        teclado_en <= 1'b0; // Ignora o teclado externo
+                        display_en <= 1'b0; 
+                        bip        <= 1'b0;
+                        setup_on   <= 1'b0;
+
+                        // Lógica 1: Destrancamento imediato por dentro
+                        if (botao_interno) begin
+                            timer_en <= 1'b0; // Desliga o timer caso estivesse rodando
+                            state    <= ST_CLOSED_UNLOCKED; 
                         end
-                        else begin
-                            // [Caso 1 e 3]: Se o dígito de índice 3 não for vazio (0xF), a senha possui pelo menos 4 dígitos legítimos
-                            // [Caso 2]: Se digits[3] == 0xF, a senha possui menos de 4 dígitos (Muito curta). Descarte total.
-                            if (digitos_value.digits[3] != VAL_EMPTY) begin
-                                draft_config.senha_master <= digitos_value; // Salva o pacote completo (Mantém até as últimas 12 inserções)
-                                state <= ST_QUAL_MENU_00; // Retorna para o menu principal limpando a operação
+                        
+                        // Lógica 2: Desativando o bloqueio pelo próprio botão (3 segundos)
+                        else if (botao_bloqueio) begin
+                            timer_limit <= 13'd3000; // Define alvo: 3000 ciclos (3 segundos)
+                            timer_en    <= 1'b1;     // Liga o timer
+                            
+                            // Fica escutando a resposta do contador
+                            if (timer_done) begin
+                                timer_en <= 1'b0;             // Desliga o timer
+                                state    <= ST_CLOSED_LOCKED; // Volta ao repouso normal (teclado volta a funcionar)
                             end
+                        end 
+                        
+                        // Lógica 3: Repouso dentro do estado
+                        else begin
+                            timer_en <= 1'b0; // Se não apertou o botão interno nem o de bloqueio, garante timer zerado
                         end
                     end
-                end
 
                 // --- MENU 05: CONFIGURAÇÃO DE SENHA USUÁRIO 1 ---
-                ST_MENU_PASS_1_05: begin
-                    current_menu <= 4'd5; // Atualiza display para mostrar "05"
-                    if (digitos_valid && (digitos_value.digits[0] != EVT_TIMEOUT)) begin
-                        if (digitos_value.digits[0] == KEY_HASH) begin
-                            state <= ST_MENU_EXIT_09;
-                        end
-                        else begin
-                            if (digitos_value.digits[3] != VAL_EMPTY) begin
-                                draft_config.senha_1 <= digitos_value; // Efetua gravação após passar no crivo de validação de tamanho mínimo
-                                state <= ST_QUAL_MENU_00;
-                            end
-                        end
+                ST_RESET_TOTAL: begin
+                    // 1. Configurações de Inicialização (Modo Seguro)
+                    teclado_en <= 1'b0; // Desabilita o teclado durante a checagem de segurança
+                    display_en <= 1'b0; 
+                    bip        <= 1'b0;
+                    setup_on   <= 1'b0;
+                    timer_en   <= 1'b0;
+
+                    // 2. Tomada de decisão baseada na Seção 20.3
+                    if (sensor_contato == 1'b1) begin
+                        // CENÁRIOS 1 e 2: Porta está fechada.
+                        // Garante a tranca acionada e vai para o repouso trancado normal.
+                        tranca <= 1'b1; 
+                        state  <= ST_CLOSED_LOCKED;
+                    end 
+                    else begin
+                        // CENÁRIO 3: Porta está aberta.
+                        // Recolhe a tranca para não quebrar o pino e joga a FSM para o ST_OPEN.
+                        // Lá no ST_OPEN, quando a porta fechar, ela irá automaticamente para 
+                        // ST_CLOSED_UNLOCKED e rodará o timer de travamento, cumprindo o PDF!
+                        tranca <= 1'b0; 
+                        state  <= ST_OPEN;
                     end
                 end
 
                 // --- MENU 06: CONFIGURAÇÃO DE SENHA USUÁRIO 2 ---
-                ST_MENU_PASS_2_06: begin
-                    current_menu <= 4'd6; // Atualiza display para mostrar "06"
-                    if (digitos_valid && (digitos_value.digits[0] != EVT_TIMEOUT)) begin
-                        if (digitos_value.digits[0] == KEY_HASH) begin
-                            state <= ST_MENU_EXIT_09;
-                        end
-                        else begin
-                            if (digitos_value.digits[3] != VAL_EMPTY) begin
-                                draft_config.senha_2 <= digitos_value; // Efetua gravação após passar no crivo de validação de tamanho mínimo
-                                state <= ST_QUAL_MENU_00;
-                            end
-                        end
+                ST_RESET_PARCIAL: begin
+                    // 1. Configurações de Inicialização Segura
+                    teclado_en <= 1'b0; // Desabilita o teclado durante a checagem
+                    display_en <= 1'b0; 
+                    bip        <= 1'b0;
+                    setup_on   <= 1'b0;
+                    timer_en   <= 1'b0; // Garante o timer zerado
+
+                    // 2. Avaliação dos Sensores Físicos (Exigência da Seção 20.3)
+                    if (sensor_contato == 1'b1) begin
+                        // Porta está fechada: aciona a tranca e vai para o modo operacional trancado
+                        tranca <= 1'b1; 
+                        state  <= ST_CLOSED_LOCKED;
+                    end 
+                    else begin
+                        // Porta está aberta: recolhe o pino e vai para ST_OPEN aguardar o fechamento
+                        tranca <= 1'b0; 
+                        state  <= ST_OPEN;
                     end
                 end
 
