@@ -29,8 +29,6 @@ module operacional(
         ST_FECHADA_TRANCADA,
         ST_FECHADA_DESTRANCADA,
         ST_ABERTA_DESTRANCADA,
-        ST_BIP,
-        ST_SOLICITANDO_ACESSO,
         ST_ACESSO_NEGADO,
         ST_BLOQUEADO,
         ST_AUTENTICA_CONFIG,
@@ -235,25 +233,7 @@ module operacional(
                     end
                 end
 
-                ST_SOLICITANDO_ACESSO: begin //4
-                    tranca     <= 1'b1;
-                    teclado_en <= 1'b1;
-                    display_en <= 1'b1;
-
-
-                    if (qualquer_senha_valida(digitos_value, config_atual)) begin
-                        tranca <= 1'b0;
-                        bip    <= 1'b1;
-                        state  <= ST_FECHADA_DESTRANCADA;
-                    end
-                    else begin
-                        bip   <= 1'b1;
-                        state <= ST_ACESSO_NEGADO;
-                    end
-
-                end
-
-                ST_ACESSO_NEGADO: begin //5
+                ST_ACESSO_NEGADO: begin //3
                     tranca     <= 1'b1;
                     teclado_en <= 1'b0;
                     display_en <= 1'b1;
@@ -269,7 +249,7 @@ module operacional(
                     end
                 end
 
-                ST_BIP, ST_BLOQUEADO, ST_AUTENTICA_CONFIG, ST_MODO_CONFIG: begin
+                ST_BLOQUEADO, ST_AUTENTICA_CONFIG, ST_MODO_CONFIG: begin
                     state <= ST_FECHADA_TRANCADA; 
                 end
 
