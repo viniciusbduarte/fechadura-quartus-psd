@@ -55,6 +55,15 @@ module operacional(
     // Contador genérico de temporização (ms, base clock 1kHz)
     logic [16:0] timer;
 
+    // Registradores para detecção de borda de subida dos botões
+    logic botao_interno_prev;
+    logic botao_config_prev;
+    logic botao_bloqueio_prev;
+
+    wire botao_interno_rise  = botao_interno  & ~botao_interno_prev;
+    wire botao_config_rise   = botao_config   & ~botao_config_prev;
+    wire botao_bloqueio_rise = botao_bloqueio & ~botao_bloqueio_prev;
+
     // ==========================================
     // ATUALIZAÇÃO DE CONFIGURAÇÃO (Registrador Sequencial)
     // ==========================================
@@ -143,14 +152,23 @@ module operacional(
             state_return <= ST_FECHADA_TRANCADA;
             timer        <= '0;
 
-            tranca     <= 1'b1; 
+            tranca     <= 1'b1;
             teclado_en <= 1'b1;
             display_en <= 1'b0;
             setup_on   <= 1'b0;
             bip        <= 1'b0;
             bcd_pac    <= '0;
+
+            botao_interno_prev  <= 1'b0;
+            botao_config_prev   <= 1'b0;
+            botao_bloqueio_prev <= 1'b0;
         end
         else begin
+            // Atualiza registradores de borda dos botões
+            botao_interno_prev  <= botao_interno;
+            botao_config_prev   <= botao_config;
+            botao_bloqueio_prev <= botao_bloqueio;
+
             // Reseta o pulso do bip por padrão, estados específicos o ativam
             bip <= 1'b0;
 
@@ -164,7 +182,7 @@ module operacional(
                     timer      <= '0;
                     bcd_pac    <= '0;
 
-                    if (botao_interno) begin
+                    if (botao_interno_rise) begin
                         tranca <= 1'b0;
                         state  <= ST_FECHADA_DESTRANCADA;
                     end
@@ -194,11 +212,11 @@ module operacional(
                     teclado_en <= 1'b1;
                     display_en <= 1'b0;
 
-                    if (sensor_contato) begin
+                    if (!sensor_contato) begin
                         timer <= '0;
                         state <= ST_ABERTA_DESTRANCADA;
                     end
-                    else if (botao_interno) begin
+                    else if (botao_interno_rise) begin
                         tranca <= 1'b1;
                         timer  <= '0;
                         state  <= ST_FECHADA_TRANCADA;
@@ -218,7 +236,10 @@ module operacional(
                     teclado_en <= 1'b1;
                     display_en <= 1'b0;
 
-                    if (!sensor_contato) begin
+                    if (botao_config_rise) begin
+                        state <= ST_AUTENTICA_CONFIG;
+                    end
+                    else if (sensor_contato) begin
                         bip   <= 1'b0;
                         timer <= '0;
                         state <= ST_FECHADA_DESTRANCADA;
@@ -249,8 +270,44 @@ module operacional(
                     end
                 end
 
-                ST_BLOQUEADO, ST_AUTENTICA_CONFIG, ST_MODO_CONFIG: begin
-                    state <= ST_FECHADA_TRANCADA; 
+                ST_BLOQUEADO: begin
+                    state <= ST_FECHADA_TRANCADA;
+                end
+
+                ST_AUTENTICA_CONFIG: begin //5
+                    tranca     <= 1'b0;
+                    teclado_en <= 1'b1;
+                    display_en <= 1'b0;
+                    setup_on   <= 1'b0;
+                    timer      <= '0;
+
+                    if (digitos_valid) begin
+                        if (senha_valida(digitos_value, config_atual.senha_master)) begin
+                            bip   <= 1'b1;
+                            state <= ST_MODO_CONFIG;
+                        end
+                        else if (digitos_value.digits[0] == EVT_TIMEOUT) begin
+                            bip   <= 1'b1;
+                            state <= ST_ABERTA_DESTRANCADA;
+                        end
+                        else begin
+                            bip   <= 1'b1;
+                        end
+                    end
+                end
+
+                ST_MODO_CONFIG: begin //6
+                    tranca     <= 1'b0;
+                    teclado_en <= 1'b1;
+                    display_en <= 1'b0;
+                    setup_on   <= 1'b1;
+                    timer      <= '0;
+
+                    if (digitos_valid && digitos_value.digits[0] == KEY_HASH) begin
+                        setup_on <= 1'b0;
+                        bip      <= 1'b1;
+                        state    <= ST_ABERTA_DESTRANCADA;
+                    end
                 end
 
                 default: state <= ST_FECHADA_TRANCADA;
