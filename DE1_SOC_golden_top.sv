@@ -251,67 +251,123 @@ import projeto_types::*; // Importa os tipos do pacote
 //  REG/WIRE declarations
 //=======================================================
 
-wire CLK_1K, SW_0, SW_1, SW_2, SW_3, SW_4, SW_5, SW_6, SW_7, SW_8, SW_9;
+wire CLK_1K;
+wire SW_0, SW_1, SW_2, SW_3, SW_4, SW_5, SW_6, SW_7, SW_8, SW_9;
 
-setupPac_t		      SETUP_PAC;
-senhaPac_t              DIGITOS_VALUE;
-logic 			DIGITOS_VALID;
-bcdPac_t                BUS_DISPLAY;
+// Sinais de Interconexão Interna (Baseados no Testbench)
+setupPac_t  SETUP_PAC;
+digitosPac_t DIGITOS_VALUE; 
+logic        DIGITOS_VALID;
+
+logic        teclado_en;
+logic        setup_on;
+logic        data_setup_ok;
+logic        display_en_setup;
+logic        display_en_op;
+
+bcdPac_t     bcd_pac_setup;
+bcdPac_t     bcd_pac_op;
+
+logic        tranca;
+logic        bip;
 
 //=======================================================
 //  Structural coding
 //=======================================================
 
-divfreq  my_div(
+// Divisor de Frequência
+divfreq my_div(
       .reset(!KEY[0]),
       .clock(CLOCK_50),
       .clk_i(CLK_1K)
 );
-	
-	
+      
+// Bloco de Configuração (Setup)
 setup my_setup (
       .clk(CLK_1K),
       .rst(!KEY[1]),
-      .setup_on(SW_0),
+      .setup_on(setup_on),               
       .digitos_value(DIGITOS_VALUE),
       .digitos_valid(DIGITOS_VALID),
-      .display_en( LEDR[2] ),
-      .bcd_pac(BUS_DISPLAY),
+      .display_en(display_en_setup),
+      .bcd_pac(bcd_pac_setup),
       .data_setup_new(SETUP_PAC),
-      .data_setup_ok(LEDR[9])
+      .data_setup_ok(data_setup_ok)
 );
 
-
+// Decodificador do Teclado Matricial
 decodificador_de_teclado my_teclado (
       .clk(CLK_1K),
       .rst(!KEY[1]),
-      .enable(KEY[2]),
+      .enable(teclado_en),               
       .col_matriz({GPIO_0[16],GPIO_0[14],GPIO_0[12],GPIO_0[10]}),
       .lin_matriz({GPIO_0[24],GPIO_0[22],GPIO_0[20],GPIO_0[18]}),
       .digitos_value(DIGITOS_VALUE),
       .digitos_valid(DIGITOS_VALID)
 );
-	
-assign LEDR[0] = SW_0;	
-	
+
+// Módulo Operacional (FSM Principal da Fechadura)
+operacional my_operacional (
+      .clk(CLK_1K),
+      .rst(!KEY[1]),
+      .sensor_contato(SW_1),             
+      .botao_interno(SW_2),              
+      .botao_bloqueio(SW_3),             
+      .botao_config(SW_4),               
+      .data_setup_new(SETUP_PAC),
+      .data_setup_ok(data_setup_ok),
+      .digitos_value(DIGITOS_VALUE),
+      .digitos_valid(DIGITOS_VALID),
+      .bcd_pac(bcd_pac_op),
+      .teclado_en(teclado_en),
+      .display_en(display_en_op),
+      .setup_on(setup_on),
+      .tranca(tranca),
+      .bip(bip)
+);
+      
+// Atribuição de saídas para os LEDs de status da placa
+assign LEDR[0] = tranca;                 
+assign LEDR[1] = bip;                    
+assign LEDR[2] = setup_on;               
+assign LEDR[9] = data_setup_ok;          
+      
 //=======================================================
-// LÓGICA DE MULTIPLEXAÇÃO 
+// LÓGICA DE MULTIPLEXAÇÃO DOS DISPLAYS
 //=======================================================
 logic [4:0] bcd_mux0, bcd_mux1, bcd_mux2, bcd_mux3, bcd_mux4, bcd_mux5;
 
 always_comb begin
-    if (SW_0) begin 
-        // Injeta 12 ( que no modulo sement7 está como tudo em 1, limpando os sementos) para os 4 primeiros dígitos, indicando que o display está em modo de configuração
+    // ADICIONADO: Condição de erro crítico (ambos os modos ativos ao mesmo tempo)
+    if (display_en_op && setup_on) begin
+        // Força o caractere 'E' (14 em decimal/hex) em todos os displays de 7 segmentos
+        bcd_mux0 = 5'd14; 
+        bcd_mux1 = 5'd14;
+        bcd_mux2 = 5'd14;
+        bcd_mux3 = 5'd14;
+        bcd_mux4 = 5'd14;
+        bcd_mux5 = 5'd14;
+    end
+    else if (setup_on) begin 
+        // Modo Configuração: Limpa os 4 primeiros dígitos e exibe dados do setup nos restantes
         bcd_mux0 = 4'd12; 
         bcd_mux1 = 4'd12;
         bcd_mux2 = 4'd12;
         bcd_mux3 = 4'd12;
-        
-        // Garante a conversão correta estendendo para 5 bits
-        bcd_mux4 = {1'b0, BUS_DISPLAY.BCD4};
-        bcd_mux5 = {1'b0, BUS_DISPLAY.BCD5};
+        bcd_mux4 = {1'b0, bcd_pac_setup.BCD4};
+        bcd_mux5 = {1'b0, bcd_pac_setup.BCD5};
     end
-    else begin       
+    else if (display_en_op) begin
+        // Modo Mensagem Operacional: Exibe dados/alertas do módulo operacional
+        bcd_mux0 = {1'b0, bcd_pac_op.BCD0};
+        bcd_mux1 = {1'b0, bcd_pac_op.BCD1};
+        bcd_mux2 = {1'b0, bcd_pac_op.BCD2};
+        bcd_mux3 = {1'b0, bcd_pac_op.BCD3};
+        bcd_mux4 = {1'b0, bcd_pac_op.BCD4};
+        bcd_mux5 = {1'b0, bcd_pac_op.BCD5};
+    end
+    else begin      
+        // Modo Normal: Exibe os últimos dígitos digitados no teclado
         bcd_mux0 = {1'b0, DIGITOS_VALUE.digits[0]};
         bcd_mux1 = {1'b0, DIGITOS_VALUE.digits[1]};
         bcd_mux2 = {1'b0, DIGITOS_VALUE.digits[2]};
@@ -322,7 +378,7 @@ always_comb begin
 end
 
 //=======================================================
-// INSTANCIAÇÃO ÚNICA DOS DECODIFICADORES DE 7 SEGMENTOS
+// INSTANCIAÇÃO DOS DECODIFICADORES DE 7 SEGMENTOS
 //=======================================================
 segment7 CONV_0(.bcd(bcd_mux0), .seg(HEX0));
 segment7 CONV_1(.bcd(bcd_mux1), .seg(HEX1));
@@ -331,6 +387,9 @@ segment7 CONV_3(.bcd(bcd_mux3), .seg(HEX3));
 segment7 CONV_4(.bcd(bcd_mux4), .seg(HEX4));
 segment7 CONV_5(.bcd(bcd_mux5), .seg(HEX5));
 
+//=======================================================
+// DEBOUNCE DOS SWITCHES DA PLACA
+//=======================================================
 debounce my_sw0(.clock(CLK_1K), .reset(!KEY[1]), .s_in(SW[0]), .s_out(SW_0));
 debounce my_sw1(.clock(CLK_1K), .reset(!KEY[1]), .s_in(SW[1]), .s_out(SW_1));
 debounce my_sw2(.clock(CLK_1K), .reset(!KEY[1]), .s_in(SW[2]), .s_out(SW_2));
