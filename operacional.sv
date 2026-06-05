@@ -255,7 +255,7 @@ module operacional(
                             bip    <= 1'b1;
                             state  <= ST_FECHADA_DESTRANCADA;
                         end
-                        else if (digitos_value.digits[0] == EVT_TIMEOUT) begin
+                        else if (digitos_value.digits[0] == EVT_TIMEOUT || digitos_value.digits[0] == KEY_HASH || digitos_value.digits[0] == VAL_EMPTY) begin
                             bip   <= 1'b1;
                             state <= ST_FECHADA_TRANCADA;
                         end
@@ -345,7 +345,7 @@ module operacional(
                             bip   <= 1'b1;
                             state <= ST_MODO_CONFIG;
                         end
-                        else if (digitos_value.digits[0] == EVT_TIMEOUT) begin
+                        else if (digitos_value.digits[0] == EVT_TIMEOUT || digitos_value.digits[0] == KEY_HASH || digitos_value.digits[0] == VAL_EMPTY) begin
                             bip   <= 1'b1;
                             state <= ST_ABERTA_DESTRANCADA;
                         end
