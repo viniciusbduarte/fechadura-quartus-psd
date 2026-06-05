@@ -1,5 +1,5 @@
 // ============================================================================
-// MÓDULO OPERACIONAL - FECHADURA ELETRÔNICA 
+// MÓDULO OPERACIONAL - FECHADURA ELETRÔNICA
 // ============================================================================
 import projeto_types::*;
 
@@ -44,16 +44,22 @@ module operacional(
     localparam logic [3:0] SEG_DASH    = 4'hA; // símbolo '-' no display 7-seg
 
     localparam int T_1S    = 1000;
+    localparam int T_5S    = 5000;
+    localparam int T_10S   = 10000;
 
     // ==========================================
     // REGISTRADORES INTERNOS
     // ==========================================
     state_t    state;
-    state_t    state_return;  // reservado para expansão
+    state_t    state_return;  // estado a restaurar após rst
     setupPac_t config_atual;  // Registrador de configuração
 
     // Contador genérico de temporização (ms, base clock 1kHz)
     logic [16:0] timer;
+
+    // Contador de duração do rst (ms, base clock 1kHz) — 14 bits cobre até ~16s
+    logic [13:0] rst_timer;
+    logic        rst_prev;
 
     // Registradores para detecção de borda de subida dos botões
     logic botao_interno_prev;
@@ -64,27 +70,11 @@ module operacional(
     wire botao_config_rise   = botao_config   & ~botao_config_prev;
     wire botao_bloqueio_rise = botao_bloqueio & ~botao_bloqueio_prev;
 
-    // ==========================================
-    // ATUALIZAÇÃO DE CONFIGURAÇÃO (Registrador Sequencial)
-    // ==========================================
-    always_ff @(posedge clk or posedge rst) begin
-        if (rst) begin
-            // Valores padrão de fábrica (Master: 1234, Usuários: FFFFFFFFFFFF)
-            config_atual.bip_status      <= 1'b1;
-            config_atual.bip_time        <= 6'd5;
-            config_atual.tranca_aut_time <= 6'd5;
-            
-            // 12 dígitos de 4 bits = 48 bits. Master = 000000001234
-            config_atual.senha_master.digits <= 48'hFFFFFFFF1234;
-            config_atual.senha_1.digits      <= {12{4'hF}};
-            config_atual.senha_2.digits      <= {12{4'hF}};
-            config_atual.senha_3.digits      <= {12{4'hF}};
-            config_atual.senha_4.digits      <= {12{4'hF}};
-        end
-        else if (data_setup_ok) begin
-            config_atual <= data_setup_new;
-        end
-    end
+
+    bit sistema_inicializado; // Tipo 'bit' nasce em 0 automaticamente!
+                          
+    // Detecta descida do rst (negedge rst) no domínio do clk
+    wire rst_fall = rst_prev & ~rst;
 
     // ==========================================
     // FUNÇÃO: VALIDAÇÃO POR JANELA DESLIZANTE
@@ -142,39 +132,112 @@ module operacional(
             senha_valida(entrada, cfg.senha_4);
     endfunction
 
+// ============================================================================
+    // FSM PRINCIPAL + RESET SELETIVO CORRIGIDO (SÍNCRONO)
+    // ============================================================================
+    always_ff @(posedge clk) begin
+        rst_prev <= rst; // Guarda o estado anterior do reset para detectar as bordas
 
-    // ==========================================
-    // FSM PRINCIPAL
-    // ==========================================
-    always_ff @(posedge clk or posedge rst) begin
+        // ------------------------------------------------------------------------
+        // 1. BOTÃO DE RESET PRESSIONADO: Conta o tempo e congela o histórico
+        // ------------------------------------------------------------------------
         if (rst) begin
-            state        <= ST_FECHADA_TRANCADA;
-            state_return <= ST_FECHADA_TRANCADA;
-            timer        <= '0;
-
-            tranca     <= 1'b1;
-            teclado_en <= 1'b1;
-            display_en <= 1'b0;
-            setup_on   <= 1'b0;
-            bip        <= 1'b0;
-            bcd_pac    <= '0;
-
-            botao_interno_prev  <= 1'b0;
-            botao_config_prev   <= 1'b0;
-            botao_bloqueio_prev <= 1'b0;
+            rst_timer <= rst_timer + 1'b1;
+            
+            // Na exata batida de clock em que o botão foi apertado (borda de subida):
+            if (rst_prev == 1'b0 && sistema_inicializado) begin
+                state_return <= state; // Salva o estado atual real antes de resetar
+            end
         end
+        
+        // ------------------------------------------------------------------------
+        // 2. BOTÃO DE RESET FOI SOLTO (Borda de descida): Avalia a duração
+        // ------------------------------------------------------------------------
+        else if (rst_fall) begin
+            rst_timer <= '0; // Limpa o contador para o próximo uso
+            timer <= '0;
+
+            // RESET TOTAL (Mínimo 10 segundos pressionado)
+            if (rst_timer >= T_10S) begin
+                config_atual.bip_status          <= 1'b1;
+                config_atual.bip_time            <= 6'd5;
+                config_atual.tranca_aut_time     <= 6'd5;
+                config_atual.senha_master.digits <= 48'hFFFFFFFF1234;
+                config_atual.senha_1.digits      <= {12{4'hF}};
+                config_atual.senha_2.digits      <= {12{4'hF}};
+                config_atual.senha_3.digits      <= {12{4'hF}};
+                config_atual.senha_4.digits      <= {12{4'hF}};
+
+                // Condição do Primeiro Reset
+                if (sistema_inicializado) begin
+                    state <= state_return; // Volta para o estado anterior
+                end else begin
+                    state                <= ST_FECHADA_TRANCADA; // Fallback se for o 1º absoluto
+                    sistema_inicializado <= 1'b1; // Ativa o histórico para os próximos
+                end
+            end
+            
+            // RESET PARCIAL (Mínimo 5 segundos e menor que 10 segundos)
+            else if (rst_timer >= T_5S) begin
+                config_atual.senha_1.digits <= {12{4'hF}};
+                config_atual.senha_2.digits <= {12{4'hF}};
+                config_atual.senha_3.digits <= {12{4'hF}};
+                config_atual.senha_4.digits <= {12{4'hF}};
+                timer <= '0; // Reseta o timer para evitar múltiplos resets parciais em sequência
+
+                if (sistema_inicializado) begin
+                    state <= state_return;
+                end else begin
+                    state                <= ST_FECHADA_TRANCADA;
+                    sistema_inicializado <= 1'b1;
+                end
+            end
+            
+            // CLIQUES CURTOS (Menor que 5 segundos): Totalmente Ignorados
+            else begin
+                if (!sistema_inicializado) begin
+                    state                <= ST_FECHADA_TRANCADA;
+                    sistema_inicializado <= 1'b1;
+                end
+                // Se já estava inicializado, não altera 'state' nem as configurações.
+            end
+        end
+        
+        // ------------------------------------------------------------------------
+        // 3. OPERAÇÃO NORMAL DA FECHADURA (Botão Solto)
+        // ------------------------------------------------------------------------
         else begin
-            // Atualiza registradores de borda dos botões
+            // Garante que se o circuito ligar e ninguém apertar o reset, ele inicializa correto
+            if (!sistema_inicializado) begin
+                state                <= ST_FECHADA_TRANCADA;
+                state_return         <= ST_FECHADA_TRANCADA;
+                sistema_inicializado <= 1'b1;
+                
+                // Carga inicial dos valores de fábrica ao ligar a placa
+                config_atual.bip_status          <= 1'b1;
+                config_atual.bip_time            <= 6'd5;
+                config_atual.tranca_aut_time     <= 6'd5;
+                config_atual.senha_master.digits <= 48'hFFFFFFFF1234;
+                config_atual.senha_1.digits      <= {12{4'hF}};
+                config_atual.senha_2.digits      <= {12{4'hF}};
+                config_atual.senha_3.digits      <= {12{4'hF}};
+                config_atual.senha_4.digits      <= {12{4'hF}};
+            end
+
+            // Atualiza registradores de borda dos botões comerciais
             botao_interno_prev  <= botao_interno;
             botao_config_prev   <= botao_config;
             botao_bloqueio_prev <= botao_bloqueio;
 
-            // Reseta o pulso do bip por padrão, estados específicos o ativam
+            // Atualiza configuração se o bloco de setup enviou novos dados
+            if (data_setup_ok)
+                config_atual <= data_setup_new;
+
+            // Reseta o pulso do bip por padrão
             bip <= 1'b0;
 
             case (state)
-
-                ST_FECHADA_TRANCADA: begin //0
+                ST_FECHADA_TRANCADA: begin
                     tranca     <= 1'b1;
                     teclado_en <= 1'b1;
                     display_en <= 1'b0;
@@ -187,27 +250,23 @@ module operacional(
                         state  <= ST_FECHADA_DESTRANCADA;
                     end
                     else if (digitos_valid) begin
-                        // 1. Primeiro testa se a sequência contém alguma senha válida
                         if (qualquer_senha_valida(digitos_value, config_atual)) begin
                             tranca <= 1'b0;
                             bip    <= 1'b1;
                             state  <= ST_FECHADA_DESTRANCADA;
                         end
-                        
-                        // 2. Se não for senha, avalia se foi um evento de Timeout ou Erro puro
                         else if (digitos_value.digits[0] == EVT_TIMEOUT) begin
                             bip   <= 1'b1;
-                            state <= ST_FECHADA_TRANCADA; // permanece trancada
+                            state <= ST_FECHADA_TRANCADA;
                         end
                         else begin
-                            // Se tinha dados mas não casou com nenhuma janela de senha: Acesso Negado
                             bip   <= 1'b1;
                             state <= ST_ACESSO_NEGADO;
                         end
                     end
                 end
 
-                ST_FECHADA_DESTRANCADA: begin //1
+                ST_FECHADA_DESTRANCADA: begin
                     tranca     <= 1'b0;
                     teclado_en <= 1'b1;
                     display_en <= 1'b0;
@@ -231,7 +290,7 @@ module operacional(
                     end
                 end
 
-                ST_ABERTA_DESTRANCADA: begin //2
+                ST_ABERTA_DESTRANCADA: begin
                     tranca     <= 1'b0;
                     teclado_en <= 1'b1;
                     display_en <= 1'b0;
@@ -248,17 +307,17 @@ module operacional(
                         if (config_atual.bip_status) begin
                             timer <= timer + 1'b1;
                             if (timer >= ({11'b0, config_atual.bip_time} * T_1S)) begin
-                                bip <= timer[8]; // Toggle (~512ms) para o bip intermitente
+                                bip <= timer[8]; 
                             end
                         end
                     end
                 end
 
-                ST_ACESSO_NEGADO: begin //3
+                ST_ACESSO_NEGADO: begin
                     tranca     <= 1'b1;
                     teclado_en <= 1'b0;
                     display_en <= 1'b1;
-                    
+
                     bcd_pac <= '{BCD5: SEG_DASH, BCD4: SEG_DASH, BCD3: SEG_DASH,
                                  BCD2: SEG_DASH, BCD1: SEG_DASH, BCD0: SEG_DASH};
 
@@ -274,7 +333,7 @@ module operacional(
                     state <= ST_FECHADA_TRANCADA;
                 end
 
-                ST_AUTENTICA_CONFIG: begin //5
+                ST_AUTENTICA_CONFIG: begin
                     tranca     <= 1'b0;
                     teclado_en <= 1'b1;
                     display_en <= 1'b0;
@@ -296,7 +355,7 @@ module operacional(
                     end
                 end
 
-                ST_MODO_CONFIG: begin //6
+                ST_MODO_CONFIG: begin
                     tranca     <= 1'b0;
                     teclado_en <= 1'b1;
                     display_en <= 1'b0;
@@ -311,9 +370,7 @@ module operacional(
                 end
 
                 default: state <= ST_FECHADA_TRANCADA;
-
             endcase
         end
     end
-
 endmodule
