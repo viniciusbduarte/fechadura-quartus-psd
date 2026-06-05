@@ -303,7 +303,7 @@ module operacional(
                     setup_on   <= 1'b1;
                     timer      <= '0;
 
-                    if (digitos_valid && digitos_value.digits[0] == KEY_HASH) begin
+                    if (data_setup_ok) begin
                         setup_on <= 1'b0;
                         bip      <= 1'b1;
                         state    <= ST_ABERTA_DESTRANCADA;
