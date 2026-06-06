@@ -62,9 +62,6 @@ module operacional(
 
     logic [16:0] bloqueio_timer;
 
-    logic [9:0]  bip_counter;
-    localparam int BIP_HALF_PERIOD = 1;
-
     logic botao_interno_prev;
     logic botao_config_prev;
     logic botao_bloqueio_prev;
@@ -74,7 +71,6 @@ module operacional(
     wire botao_bloqueio_rise = botao_bloqueio & ~botao_bloqueio_prev;
 
     bit sistema_inicializado;
-
     wire rst_fall = rst_prev & ~rst;
 
     // ==========================================
@@ -90,7 +86,6 @@ module operacional(
 
         if (alvo.digits[3] == VAL_EMPTY)
             return 1'b0;
-
         for (int i = 0; i <= 19; i++) begin
             match = 1'b1;
             for (int j = 0; j < 12; j++) begin
@@ -131,7 +126,6 @@ module operacional(
         // 1. BOTÃO DE RESET PRESSIONADO
         if (rst) begin
             rst_timer <= rst_timer + 1'b1;
-
             if (rst_prev == 1'b0 && sistema_inicializado) begin
                 state_return <= state;
             end
@@ -142,7 +136,6 @@ module operacional(
             rst_timer      <= '0;
             timer          <= '0;
             bloqueio_timer <= '0;
-            bip_counter    <= '0;
 
             if (rst_timer >= T_10S) begin
                 config_atual.bip_status          <= 1'b1;
@@ -199,8 +192,6 @@ module operacional(
                 state_return         <= ST_FECHADA_TRANCADA;
                 sistema_inicializado <= 1'b1;
                 bloqueio_timer       <= '0;
-                bip_counter          <= '0;
-
                 config_atual.bip_status          <= 1'b1;
                 config_atual.bip_time            <= 6'd5;
                 config_atual.tranca_aut_time     <= 6'd5;
@@ -216,10 +207,8 @@ module operacional(
             botao_bloqueio_prev <= botao_bloqueio;
 
             state_return <= state;
-
             if (data_setup_ok)
                 config_atual <= data_setup_new;
-
             tranca     <= 1'b1;
             teclado_en <= 1'b0;
             display_en <= 1'b0;
@@ -283,6 +272,8 @@ module operacional(
                     bcd_pac    <= '0;
 
                     if (!sensor_contato) begin
+                        // FIX: zera o timer ao entrar em ST_ABERTA_DESTRANCADA
+                        // para garantir contagem limpa do bip
                         timer <= '0;
                         state <= ST_ABERTA_DESTRANCADA;
                     end
@@ -293,7 +284,9 @@ module operacional(
                     end
                     else begin
                         timer <= timer + 1'b1;
-                        if (timer >= 17'(32'(config_atual.tranca_aut_time) * 32'(T_1S))) begin
+                        // FIX: substituído cast 17'(32'(...)*32'(...)) pela
+                        // concatenação {11'b0, ...} igual ao modelo de referência
+                        if (timer >= ({11'b0, config_atual.tranca_aut_time} * T_1S)) begin
                             tranca <= 1'b1;
                             timer  <= '0;
                             state  <= ST_FECHADA_TRANCADA;
@@ -318,15 +311,13 @@ module operacional(
                         state <= ST_FECHADA_DESTRANCADA;
                     end
                     else begin
+                        // FIX: timer incrementa sempre no else, igual ao modelo
+                        // de referência; se bip_status=0 o timer avança mas bip
+                        // nunca dispara, evitando disparo imediato na reentrada
+                        timer <= timer + 1'b1;
                         if (config_atual.bip_status) begin
-                            timer <= timer + 1'b1;
                             if (timer >= ({11'b0, config_atual.bip_time} * T_1S)) begin
-
-                                bip_counter <= bip_counter + 1'b1;
-                                if (bip_counter >= BIP_HALF_PERIOD) begin
-                                    bip         <= 1'b1;
-                                    bip_counter <= '0;
-                                end
+                                bip <= timer[8];
                             end
                         end
                     end
@@ -338,10 +329,8 @@ module operacional(
                     teclado_en <= 1'b0;
                     display_en <= 1'b1;
                     setup_on   <= 1'b0;
-
                     bcd_pac <= '{BCD5: SEG_DASH, BCD4: SEG_DASH, BCD3: SEG_DASH,
                                  BCD2: SEG_DASH, BCD1: SEG_DASH, BCD0: SEG_DASH};
-
                     timer <= timer + 1'b1;
                     if (timer >= T_1S) begin
                         timer   <= '0;
@@ -358,7 +347,6 @@ module operacional(
                     setup_on   <= 1'b0;
 
                     timer <= timer + 1'b1;
-
                     if (timer >= T_10S) begin
                         bip   <= 1'b1;
                         timer <= '0;
@@ -379,7 +367,6 @@ module operacional(
                         end
                         else begin
                             bip <= 1'b1;
-
                         end
                     end
                 end
@@ -391,7 +378,6 @@ module operacional(
                     display_en <= 1'b0;
                     setup_on   <= 1'b1;
                     timer      <= '0;
-
                     if (data_setup_ok) begin
                         setup_on <= 1'b0;
                         bip      <= 1'b1;
@@ -408,7 +394,6 @@ module operacional(
                     timer          <= '0;
                     bcd_pac        <= '0;
                     bloqueio_timer <= '0;
-
                     if (botao_interno_rise) begin
                         tranca <= 1'b0;
                         bip    <= 1'b1;
@@ -417,7 +402,6 @@ module operacional(
                 end
 
                 default: state <= ST_FECHADA_TRANCADA;
-
             endcase
         end
     end

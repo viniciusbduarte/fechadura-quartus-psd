@@ -1,16 +1,16 @@
-Fitter Status : Successful - Fri Jun  5 23:14:38 2026
+Fitter Status : Successful - Sat Jun  6 10:37:51 2026
 Quartus Prime Version : 25.1std.0 Build 1129 10/21/2025 SC Lite Edition
 Revision Name : fechadura-eletronica
 Top-level Entity Name : DE1_SOC_golden_top
 Family : Cyclone V
 Device : 5CSEMA5F31C6
 Timing Models : Final
-Logic utilization (in ALMs) : 3,052 / 32,070 ( 10 % )
-Total registers : 4423
+Logic utilization (in ALMs) : 2,105 / 32,070 ( 7 % )
+Total registers : 1002
 Total pins : 241 / 457 ( 53 % )
 Total virtual pins : 0
-Total block memory bits : 686,080 / 4,065,280 ( 17 % )
-Total RAM Blocks : 67 / 397 ( 17 % )
+Total block memory bits : 0 / 4,065,280 ( 0 % )
+Total RAM Blocks : 0 / 397 ( 0 % )
 Total DSP Blocks : 2 / 87 ( 2 % )
 Total HSSI RX PCSs : 0
 Total HSSI PMA RX Deserializers : 0
