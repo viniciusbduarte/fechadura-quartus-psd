@@ -244,54 +244,51 @@ module operacional(
             bip <= 1'b0;
 
             case (state)
-						ST_FECHADA_TRANCADA: begin
-							 tranca     <= 1'b1;
-							 teclado_en <= 1'b1;
-							 display_en <= 1'b0;
-							 setup_on   <= 1'b0;
-							 timer      <= '0;
-							 bcd_pac    <= '0;
+                ST_FECHADA_TRANCADA: begin
+                    tranca     <= 1'b1;
+                    teclado_en <= 1'b1;
+                    display_en <= 1'b0;
+                    setup_on   <= 1'b0;
+                    timer      <= '0;
+                    bcd_pac    <= '0;
 
-							 // Prioridade 1: botão interno
-							 if (botao_interno_rise) begin
-								  bloqueio_timer <= '0;
-								  tranca         <= 1'b0;
-								  state          <= ST_FECHADA_DESTRANCADA;
-							 end
-							 // Prioridade 2: ativar Não Perturbe (segurar botão 3s com porta fechada)
-							 else if (botao_bloqueio && sensor_contato && (bloqueio_timer >= T_3S)) begin
-								  bloqueio_timer <= '0;
-								  bip            <= 1'b1;
-								  state          <= ST_NAO_PERTURBE;
-							 end
-							 // Prioridade 3: dígitos recebidos do teclado
-							 else if (digitos_valid) begin
-								  bloqueio_timer <= '0;
-								  if (qualquer_senha_valida(digitos_value, config_atual)) begin
-										tranca <= 1'b0;
-										bip    <= 1'b1;
-										state  <= ST_FECHADA_DESTRANCADA;
-								  end
-								  else if (digitos_value.digits[0] == EVT_TIMEOUT ||
-											  digitos_value.digits[0] == KEY_HASH    ||
-											  digitos_value.digits[0] == VAL_EMPTY) begin
-										bip   <= 1'b1;
-										state <= ST_FECHADA_TRANCADA;
-								  end
-								  else begin
-										bip   <= 1'b1;
-										state <= ST_ACESSO_NEGADO;
-								  end
-							 end
-							 // Prioridade 4: contar tempo do botão de bloqueio
-							 else if (botao_bloqueio && sensor_contato) begin
-								  bloqueio_timer <= bloqueio_timer + 1'b1;
-							 end
-							 else begin
-								  bloqueio_timer <= '0;
-							 end
-						end
-						
+                // Prioridade 1: botão interno destrava imediatamente
+                if (botao_interno_rise) begin
+                    bloqueio_timer <= '0;
+                    tranca         <= 1'b0;
+                    state          <= ST_FECHADA_DESTRANCADA;
+                end
+                // Prioridade 2: ativação do modo não perturbe
+                else if (botao_bloqueio && sensor_contato && (bloqueio_timer >= T_3S)) begin
+                    bloqueio_timer <= '0;
+                    bip            <= 1'b1;
+                    state          <= ST_NAO_PERTURBE;
+                end
+                // Prioridade 3: contagem do timer de bloqueio
+                else if (botao_bloqueio && sensor_contato) begin
+                    bloqueio_timer <= bloqueio_timer + 1'b1;
+                end
+                else begin
+                    bloqueio_timer <= '0;
+                end
+                    else if (digitos_valid) begin
+                        bloqueio_timer <= '0;
+                        if (qualquer_senha_valida(digitos_value, config_atual)) begin
+                            tranca <= 1'b0;
+                            bip    <= 1'b1;
+                            state  <= ST_FECHADA_DESTRANCADA;
+                        end
+                        else if (digitos_value.digits[0] == EVT_TIMEOUT || digitos_value.digits[0] == KEY_HASH || digitos_value.digits[0] == VAL_EMPTY) begin
+                            bip   <= 1'b1;
+                            state <= ST_FECHADA_TRANCADA;
+                        end
+                        else begin
+                            bip   <= 1'b1;
+                            state <= ST_ACESSO_NEGADO;
+                        end
+                    end
+                end
+
                 ST_FECHADA_DESTRANCADA: begin
                     tranca     <= 1'b0;
                     teclado_en <= 1'b1;

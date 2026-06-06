@@ -1,4 +1,14 @@
 
+State Machine - |DE1_SOC_golden_top|operacional:my_operacional|state
+Name state.ST_MODO_CONFIG state.ST_AUTENTICA_CONFIG state.ST_BLOQUEADO state.ST_ACESSO_NEGADO state.ST_ABERTA_DESTRANCADA state.ST_FECHADA_DESTRANCADA state.ST_FECHADA_TRANCADA 
+state.ST_FECHADA_TRANCADA 0 0 0 0 0 0 0 
+state.ST_FECHADA_DESTRANCADA 0 0 0 0 0 1 1 
+state.ST_ABERTA_DESTRANCADA 0 0 0 0 1 0 1 
+state.ST_ACESSO_NEGADO 0 0 0 1 0 0 1 
+state.ST_BLOQUEADO 0 0 1 0 0 0 1 
+state.ST_AUTENTICA_CONFIG 0 1 0 0 0 0 1 
+state.ST_MODO_CONFIG 1 0 0 0 0 0 1 
+
 State Machine - |DE1_SOC_golden_top|decodificador_de_teclado:my_teclado|state
 Name state.ST_CLEAR state.ST_TIMEOUT_PULSE state.ST_VALID_PULSE state.ST_HOLD state.ST_PROCESS state.ST_DEBOUNCE state.ST_SCAN state.ST_INIT 
 state.ST_INIT 0 0 0 0 0 0 0 0 
