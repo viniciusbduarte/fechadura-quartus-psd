@@ -1,10 +1,10 @@
 // ============================================================================
-// MÓDULO OPERACIONAL - FECHADURA ELETRÔNICA 
+// MÓDULO OPERACIONAL - FECHADURA ELETRÔNICA (OTIMIZADO)
 // ============================================================================
 import projeto_types::*;
 
 module operacional(
-    input  logic        clk,
+    input  logic        clk,              // Base de tempo esperada: 1 kHz (1ms)
     input  logic        rst,
     input  logic        sensor_contato,
     input  logic        botao_interno,
@@ -45,34 +45,34 @@ module operacional(
     localparam logic [3:0] VAL_EMPTY   = 4'hF;
     localparam logic [3:0] SEG_DASH    = 4'hA;
 
-    localparam int T_1S    = 1000;
-    localparam int T_3S    = 3000;
-    localparam int T_5S    = 5000;
-    localparam int T_10S   = 10000;
-    localparam int T_15S   = 15000;
-    localparam int T_60S   = 60000;
-    localparam int MAX_TIMER = 65535;
+    localparam int T_1S   = 1000;
+    localparam int T_3S   = 3000;
+    localparam int T_5S   = 5000;
+    localparam int T_10S  = 10000;
+    localparam int T_15S  = 15000;
+    localparam int T_60S  = 60000;
 
     // ==========================================
-    // REGISTRADORES INTERNOS
+    // REGISTRADORES INTERNOS OTIMIZADOS
     // ==========================================
     state_t    state;
     state_t    state_return;
     setupPac_t config_atual;
 
-    logic [16:0] timer;
     logic [13:0] rst_timer;
     logic        rst_prev;
 
-    logic [2:0]  cont_erros;
-    logic [2:0]  cont_bloqueios;
+    // Contadores de erro e bloqueio
+    logic [2:0] cont_erros;
+    logic [2:0] cont_bloqueios;
 
-    logic [16:0] lockout_timer;
-    logic [16:0] tentativa_timer;
-    logic [16:0] inactivity_timer;
-    logic [16:0] bloqueio_timer;
-    logic [5:0]  lockout_time_sec;
+    // Gerenciamento de Tempo Otimizado (Reduzido de 5 para 3 contadores)
+    logic [16:0] state_timer;         // Timer genérico para durações de estados
+    logic [16:0] inactivity_timer;    // Janela de 60s para reset de penalidades
+    logic [11:0] hold_timer;          // Contador para detecção de botão pressionado (3s)
+    logic [5:0]  lockout_time_sec;    // Duração do bloqueio dinâmico
 
+    // Controle de blink de 1Hz integrado
     logic [9:0]  blink_counter;
     logic        blink_1hz;
 
@@ -80,12 +80,28 @@ module operacional(
     logic botao_config_prev;
     logic botao_bloqueio_prev;
 
-    wire botao_interno_rise  = botao_interno  & ~botao_interno_prev;
-    wire botao_config_rise   = botao_config   & ~botao_config_prev;
-    wire botao_bloqueio_rise = botao_bloqueio & ~botao_bloqueio_prev;
+    wire botao_interno_rise;
+    wire botao_config_rise;
+    wire botao_bloqueio_rise;
+    wire rst_fall;
+
+    assign botao_interno_rise  = botao_interno  & ~botao_interno_prev;
+    assign botao_config_rise   = botao_config   & ~botao_config_prev;
+    assign botao_bloqueio_rise = botao_bloqueio & ~botao_bloqueio_prev;
+    assign rst_fall            = rst_prev & ~rst;
 
     bit sistema_inicializado;
-    wire rst_fall = rst_prev & ~rst;
+
+    // ==========================================
+    // LÓGICA COMBINACIONAL (Tempo de Bloqueio)
+    // ==========================================
+    always_comb begin
+        case (cont_bloqueios)
+            3'd1:    lockout_time_sec = 6'd5;
+            3'd2:    lockout_time_sec = 6'd10;
+            default: lockout_time_sec = 6'd20;
+        endcase
+    end
 
     // ==========================================
     // FUNÇÕES DE VALIDAÇÃO DE SENHA
@@ -126,25 +142,26 @@ module operacional(
     endfunction
 
     // ============================================================================
-    // FSM PRINCIPAL + RESET SELETIVO (SÍNCRONO)
+    // FSM PRINCIPAL + SISTEMA DE CONTROLE
     // ============================================================================
     always_ff @(posedge clk) begin
         rst_prev <= rst;
 
-        // 1. BOTÃO DE RESET PRESSIONADO
+        // 1. GERENCIAMENTO DO RESET HARDWARE
         if (rst) begin
-            rst_timer <= rst_timer + 1'b1;
-            if (rst_prev == 1'b0 && sistema_inicializado) begin
+            if (rst_timer < 14'h3FFF) begin
+                rst_timer <= rst_timer + 1'b1;
+            end
+            if (!rst_prev && sistema_inicializado) begin
                 state_return <= state;
             end
         end
 
-        // 2. BOTÃO DE RESET SOLTO (Borda de descida)
         else if (rst_fall) begin
-            rst_timer      <= '0;
-            timer          <= '0;
-            bloqueio_timer <= '0;
-
+            rst_timer    <= '0;
+            state_timer  <= '0;
+            hold_timer   <= '0;
+            
             if (rst_timer >= T_10S) begin
                 config_atual.bip_status          <= 1'b1;
                 config_atual.bip_time            <= 6'd5;
@@ -156,15 +173,9 @@ module operacional(
                 config_atual.senha_4.digits      <= {12{4'hF}};
                 cont_erros     <= '0;
                 cont_bloqueios <= '0;
-
-                if (sistema_inicializado) begin
-                    state <= state_return;
-                end else begin
-                    state                <= ST_FECHADA_TRANCADA;
-                    sistema_inicializado <= 1'b1;
-                end
+                state          <= sistema_inicializado ? state_return : ST_FECHADA_TRANCADA;
+                sistema_inicializado <= 1'b1;
             end
-
             else if (rst_timer >= T_5S) begin
                 config_atual.senha_1.digits <= {12{4'hF}};
                 config_atual.senha_2.digits <= {12{4'hF}};
@@ -172,38 +183,12 @@ module operacional(
                 config_atual.senha_4.digits <= {12{4'hF}};
                 cont_erros     <= '0;
                 cont_bloqueios <= '0;
-
-                if (sistema_inicializado) begin
-                    state <= state_return;
-                end else begin
-                    state                <= ST_FECHADA_TRANCADA;
-                    sistema_inicializado <= 1'b1;
-                end
-            end
-
-            else begin
-                if (!sistema_inicializado) begin
-                    state                            <= ST_FECHADA_TRANCADA;
-                    sistema_inicializado             <= 1'b1;
-                    config_atual.bip_status          <= 1'b1;
-                    config_atual.bip_time            <= 6'd5;
-                    config_atual.tranca_aut_time     <= 6'd5;
-                    config_atual.senha_master.digits <= 48'hFFFFFFFF1234;
-                    config_atual.senha_1.digits      <= {12{4'hF}};
-                    config_atual.senha_2.digits      <= {12{4'hF}};
-                    config_atual.senha_3.digits      <= {12{4'hF}};
-                    config_atual.senha_4.digits      <= {12{4'hF}};
-                end
-            end
-        end
-
-        // 3. OPERAÇÃO NORMAL
-        else begin
-            if (!sistema_inicializado) begin
-                state                <= ST_FECHADA_TRANCADA;
-                state_return         <= ST_FECHADA_TRANCADA;
+                state          <= sistema_inicializado ? state_return : ST_FECHADA_TRANCADA;
                 sistema_inicializado <= 1'b1;
-                bloqueio_timer       <= '0;
+            end
+            else if (!sistema_inicializado) begin
+                state                            <= ST_FECHADA_TRANCADA;
+                sistema_inicializado             <= 1'b1;
                 config_atual.bip_status          <= 1'b1;
                 config_atual.bip_time            <= 6'd5;
                 config_atual.tranca_aut_time     <= 6'd5;
@@ -212,10 +197,33 @@ module operacional(
                 config_atual.senha_2.digits      <= {12{4'hF}};
                 config_atual.senha_3.digits      <= {12{4'hF}};
                 config_atual.senha_4.digits      <= {12{4'hF}};
-                cont_erros     <= '0;
+              cont_erros     <= '0;
                 cont_bloqueios <= '0;
             end
+        end
 
+        // 2. OPERAÇÃO NORMAL DA MALHA DE CONTROLE
+        else begin
+            if (!sistema_inicializado) begin
+                state                <= ST_FECHADA_TRANCADA;
+                state_return         <= ST_FECHADA_TRANCADA;
+                sistema_inicializado <= 1'b1;
+                hold_timer           <= '0;
+                cont_erros           <= '0;
+                cont_bloqueios       <= '0;
+                state_timer          <= '0;
+                inactivity_timer     <= '0;
+                config_atual.bip_status          <= 1'b1;
+                config_atual.bip_time            <= 6'd5;
+                config_atual.tranca_aut_time     <= 6'd5;
+                config_atual.senha_master.digits <= 48'hFFFFFFFF1234;
+                config_atual.senha_1.digits      <= {12{4'hF}};
+                config_atual.senha_2.digits      <= {12{4'hF}};
+                config_atual.senha_3.digits      <= {12{4'hF}};
+                config_atual.senha_4.digits      <= {12{4'hF}};
+            end
+
+            // Amostragem de bordas
             botao_interno_prev  <= botao_interno;
             botao_config_prev   <= botao_config;
             botao_bloqueio_prev <= botao_bloqueio;
@@ -224,6 +232,7 @@ module operacional(
             if (data_setup_ok)
                 config_atual <= data_setup_new;
 
+            // Atribuições default seguras (Evita latches)
             tranca     <= 1'b1;
             teclado_en <= 1'b0;
             display_en <= 1'b0;
@@ -231,280 +240,226 @@ module operacional(
             bcd_pac    <= '0;
             bip        <= 1'b0;
 
-            // Gerador de pulso 1Hz para piscar
-            blink_counter <= blink_counter + 1;
-            if (blink_counter == 500) blink_1hz <= ~blink_1hz;
-            if (blink_counter >= 999) blink_counter <= 0;
+            // Incremento contínuo dos timers com proteção contra overflow
+            if (state_timer < 17'h1FFFF)      state_timer <= state_timer + 1'b1;
+            if (inactivity_timer < 17'h1FFFF) inactivity_timer <= inactivity_timer + 1'b1;
 
+            // Gerador de onda quadrada estável de 1Hz (base de tempo de 1ms)
+            if (blink_counter >= 999) begin
+                blink_counter <= '0;
+            end else begin
+                blink_counter <= blink_counter + 1'b1;
+            end
+            if (blink_counter == 500) begin
+                blink_1hz <= ~blink_1hz;
+            end
+
+            // MÁQUINA DE ESTADOS (FSM)
             case (state)
 
-                // ----------------
                 ST_FECHADA_TRANCADA: begin
                     tranca     <= 1'b1;
                     teclado_en <= 1'b1;
-                    display_en <= 1'b0;
-                    setup_on   <= 1'b0;
-                    timer      <= '0;
-                    bcd_pac    <= '0;
 
-                    inactivity_timer <= inactivity_timer + 1;
+                    // Limpa erros se a porta ficar inativa por 60s contínuos
                     if (inactivity_timer >= T_60S) begin
                         cont_erros <= '0;
                     end
 
                     if (botao_interno_rise) begin
-                        bloqueio_timer   <= '0;
-                        tranca           <= 1'b0;
-                        cont_erros       <= '0;
-                        cont_bloqueios   <= '0;
+                        state_timer      <= '0;
+                        inactivity_timer <= '0;
                         state            <= ST_FECHADA_DESTRANCADA;
                     end
-                    else if (botao_bloqueio && sensor_contato && (bloqueio_timer >= T_3S)) begin
-                        bloqueio_timer <= '0;
-                        bip            <= 1'b1;
-                        state          <= ST_NAO_PERTURBE;
+                    else if (botao_bloqueio && sensor_contato) begin
+                        hold_timer <= hold_timer + 1'b1;
+                        if (hold_timer >= T_3S) begin
+                            hold_timer       <= '0;
+                            inactivity_timer <= '0;
+                            bip              <= 1'b1;
+                            state            <= ST_NAO_PERTURBE;
+                        end
+                    end
+                    else begin
+                        hold_timer <= '0; // Zera se o botão for solto antes dos 3s
+                        
+                        if (digitos_valid) begin
+                            inactivity_timer <= '0; // Reset por atividade no teclado
+                            
+                            if (qualquer_senha_valida(digitos_value, config_atual)) begin
+                                bip            <= 1'b1;
+                                cont_erros     <= '0;
+                                cont_bloqueios <= '0;
+                                state_timer    <= '0;
+                                state          <= ST_FECHADA_DESTRANCADA;
+                            end
+                            else if (digitos_value.digits[0] == EVT_TIMEOUT ||
+                                     digitos_value.digits[0] == KEY_HASH    ||
+                                     digitos_value.digits[0] == VAL_EMPTY) begin
+                                state <= ST_FECHADA_TRANCADA;
+                            end
+                            else begin // Senha Incorreta
+                                bip <= 1'b1;
+                                if (cont_erros >= 3'd4) begin // 5ª falha consecutiva
+                                    cont_bloqueios   <= (cont_bloqueios < 3'd7) ? cont_bloqueios + 1'b1 : 3'd7;
+                                    state_timer      <= '0;
+                                    state            <= ST_BLOQUEADO;
+                                end else begin
+                                    cont_erros  <= cont_erros + 1'b1;
+                                    state_timer <= '0;
+                                    state       <= ST_ACESSO_NEGADO;
+                                end
+                            end
+                        end
+                    end
+                end
+
+                ST_FECHADA_DESTRANCADA: begin
+                    tranca         <= 1'b0;
+                    teclado_en     <= 1'b1;
+                    cont_erros     <= '0;
+                    cont_bloqueios <= '0;
+
+                    if (!sensor_contato) begin
+                        state_timer <= '0;
+                        state       <= ST_ABERTA_DESTRANCADA;
+                    end
+                    else if (botao_interno_rise || (state_timer >= ({11'b0, config_atual.tranca_aut_time} * T_1S))) begin
+                        state_timer <= '0;
+                        state       <= ST_FECHADA_TRANCADA;
+                    end
+                end
+
+                ST_ABERTA_DESTRANCADA: begin
+                    tranca         <= 1'b0;
+                    teclado_en     <= 1'b1;
+                    cont_erros     <= '0;
+                    cont_bloqueios <= '0;
+
+                    if (botao_config_rise) begin
+                        state_timer <= '0;
+                        state       <= ST_AUTENTICA_CONFIG;
+                    end
+                    else if (sensor_contato) begin
+                        state_timer <= '0;
+                        state       <= ST_FECHADA_DESTRANCADA;
+                    end
+                    else if (config_atual.bip_status && (state_timer >= ({11'b0, config_atual.bip_time} * T_1S))) begin
+                        bip <= state_timer[8];
+                    end
+                end
+
+                ST_ACESSO_NEGADO: begin
+                    display_en   <= 1'b1;
+                    bcd_pac.BCD0 <= (cont_erros >= 3'd1) ? SEG_DASH : VAL_EMPTY;
+                    bcd_pac.BCD1 <= (cont_erros >= 3'd2) ? SEG_DASH : VAL_EMPTY;
+                    bcd_pac.BCD2 <= (cont_erros >= 3'd3) ? SEG_DASH : VAL_EMPTY;
+                    bcd_pac.BCD3 <= (cont_erros >= 3'd4) ? SEG_DASH : VAL_EMPTY;
+                    bcd_pac.BCD4 <= (cont_erros >= 3'd5) ? SEG_DASH : VAL_EMPTY;
+                    bcd_pac.BCD5 <= (cont_erros >= 3'd5) ? SEG_DASH : VAL_EMPTY;
+
+                    if (state_timer >= T_1S) begin
+                        state_timer <= '0;
+                        state       <= ST_FECHADA_TRANCADA;
+                    end
+                end
+
+                ST_BLOQUEADO: begin
+                    display_en <= 1'b1;
+                    bcd_pac    <= '{default: SEG_DASH};
+
+                    if (state_timer >= ({11'b0, lockout_time_sec} * T_1S)) begin
+                        state_timer      <= '0;
+                        inactivity_timer <= '0; // Reseta no momento exato do desbloqueio
+                        state            <= ST_TENTATIVA_LIBERADA;
+                    end
+                end
+
+                ST_TENTATIVA_LIBERADA: begin
+                    teclado_en <= 1'b1;
+                    bcd_pac    <= '{default: SEG_DASH};
+
+                    // Controla o efeito piscando do display durante os primeiros 15 segundos
+                    display_en <= (state_timer < T_15S) ? blink_1hz : 1'b0;
+
+                    // Se passar 60 segundos sem ação nenhuma, limpa os históricos de erro
+                    if (inactivity_timer >= T_60S) begin
+                        cont_erros  <= '0;
+                        cont_bloqueios <= '0;
+                        state_timer <= '0;
+                        state       <= ST_FECHADA_TRANCADA;
+                    end
+                    else if (botao_interno_rise) begin
+                        cont_erros     <= '0;
+                        cont_bloqueios <= '0;
+                        state_timer    <= '0;
+                        state          <= ST_FECHADA_DESTRANCADA;
                     end
                     else if (digitos_valid) begin
                         inactivity_timer <= '0;
-                        bloqueio_timer   <= '0;
+
                         if (qualquer_senha_valida(digitos_value, config_atual)) begin
-                            tranca         <= 1'b0;
                             bip            <= 1'b1;
                             cont_erros     <= '0;
                             cont_bloqueios <= '0;
+                            state_timer    <= '0;
                             state          <= ST_FECHADA_DESTRANCADA;
                         end
                         else if (digitos_value.digits[0] == EVT_TIMEOUT ||
                                  digitos_value.digits[0] == KEY_HASH    ||
                                  digitos_value.digits[0] == VAL_EMPTY) begin
-                            state <= ST_FECHADA_TRANCADA;
+                            state_timer <= '0; // Reinicia janela de 15s piscando por segurança
                         end
-                        else begin // Senha inválida
-                            bip        <= 1'b1;
-                            cont_erros <= cont_erros + 1;
-                            if (cont_erros < 5) begin
-                                state <= ST_ACESSO_NEGADO;
-                            end else begin
-                                cont_bloqueios <= cont_bloqueios + 1;
-                                state          <= ST_BLOQUEADO;
-                            end
-                        end
-                    end
-                    else if (botao_bloqueio && sensor_contato) begin
-                        bloqueio_timer <= bloqueio_timer + 1'b1;
-                    end
-                    else begin
-                        bloqueio_timer <= '0;
-                    end
-                end
-
-                // ----------------
-                ST_FECHADA_DESTRANCADA: begin
-                    tranca         <= 1'b0;
-                    teclado_en     <= 1'b1;
-                    display_en     <= 1'b0;
-                    setup_on       <= 1'b0;
-                    bcd_pac        <= '0;
-                    cont_erros     <= '0;
-                    cont_bloqueios <= '0;
-
-                    if (!sensor_contato) begin
-                        timer <= '0;
-                        state <= ST_ABERTA_DESTRANCADA;
-                    end
-                    else if (botao_interno_rise) begin
-                        tranca <= 1'b1;
-                        timer  <= '0;
-                        state  <= ST_FECHADA_TRANCADA;
-                    end
-                    else begin
-                        timer <= timer + 1'b1;
-                        if (timer >= ({11'b0, config_atual.tranca_aut_time} * T_1S)) begin
-                            tranca <= 1'b1;
-                            timer  <= '0;
-                            state  <= ST_FECHADA_TRANCADA;
-                        end
-                    end
-                end
-
-                // ----------------
-                ST_ABERTA_DESTRANCADA: begin
-                    tranca         <= 1'b0;
-                    teclado_en     <= 1'b1;
-                    display_en     <= 1'b0;
-                    setup_on       <= 1'b0;
-                    bcd_pac        <= '0;
-                    cont_erros     <= '0;
-                    cont_bloqueios <= '0;
-
-                    if (botao_config_rise) begin
-                        timer <= '0;
-                        state <= ST_AUTENTICA_CONFIG;
-                    end
-                    else if (sensor_contato) begin
-                        timer <= '0;
-                        state <= ST_FECHADA_DESTRANCADA;
-                    end
-                    else begin
-                        timer <= timer + 1'b1;
-                        if (config_atual.bip_status) begin
-                            if (timer >= ({11'b0, config_atual.bip_time} * T_1S)) begin
-                                bip <= timer[8];
-                            end
-                        end
-                    end
-                end
-
-                // ----------------
-                ST_ACESSO_NEGADO: begin
-                    tranca     <= 1'b1;
-                    teclado_en <= 1'b0;
-                    display_en <= 1'b1;
-                    setup_on   <= 1'b0;
-
-                    bcd_pac.BCD0 <= (cont_erros >= 1) ? SEG_DASH : VAL_EMPTY;
-                    bcd_pac.BCD1 <= (cont_erros >= 2) ? SEG_DASH : VAL_EMPTY;
-                    bcd_pac.BCD2 <= (cont_erros >= 3) ? SEG_DASH : VAL_EMPTY;
-                    bcd_pac.BCD3 <= (cont_erros >= 4) ? SEG_DASH : VAL_EMPTY;
-                    bcd_pac.BCD4 <= (cont_erros >= 5) ? SEG_DASH : VAL_EMPTY;
-                    bcd_pac.BCD5 <= (cont_erros >= 5) ? SEG_DASH : VAL_EMPTY;
-
-                    timer <= timer + 1'b1;
-                    if (timer >= T_1S) begin
-                        timer   <= '0;
-                        bcd_pac <= '0;
-                        state   <= ST_FECHADA_TRANCADA;
-                    end
-                end
-
-                // ----------------
-                ST_BLOQUEADO: begin
-                    tranca     <= 1'b1;
-                    teclado_en <= 1'b0;
-                    display_en <= 1'b1;
-                    bcd_pac    <= '{default: SEG_DASH};
-
-                    case (cont_bloqueios)
-                        1:       lockout_time_sec <= 6'd5;
-                        2:       lockout_time_sec <= 6'd10;
-                        default: lockout_time_sec <= 6'd20;
-                    endcase
-
-                    lockout_timer <= lockout_timer + 1;
-                    if (lockout_timer >= ({11'b0, lockout_time_sec} * T_1S)) begin
-                        lockout_timer    <= '0;
-                        tentativa_timer  <= '0;
-                        inactivity_timer <= '0;
-                        state            <= ST_TENTATIVA_LIBERADA;
-                    end
-                end
-
-                // ----------------
-                ST_TENTATIVA_LIBERADA: begin
-                    tranca     <= 1'b1;
-                    teclado_en <= 1'b1;
-
-                    tentativa_timer <= tentativa_timer + 1;
-                    if (tentativa_timer < T_15S) begin
-                        display_en <= blink_1hz;
-                        bcd_pac    <= '{default: SEG_DASH};
-                    end else begin
-                        display_en <= 1'b0;
-                    end
-
-                    inactivity_timer <= inactivity_timer + 1;
-                    if (inactivity_timer >= (T_60S + ({11'b0, lockout_time_sec} * T_1S))) begin
-                        cont_erros     <= '0;
-                        cont_bloqueios <= '0;
-                        state          <= ST_FECHADA_TRANCADA;
-                    end
-
-                    if (botao_interno_rise) begin
-                        tranca         <= 1'b0;
-                        cont_erros     <= '0;
-                        cont_bloqueios <= '0;
-                        state          <= ST_FECHADA_DESTRANCADA;
-                    end else if (digitos_valid) begin
-                        inactivity_timer <= '0;
-                        if (qualquer_senha_valida(digitos_value, config_atual)) begin
-                            tranca         <= 1'b0;
+                        else begin // Erro imediato durante período de graça reinicia o bloqueio severo
                             bip            <= 1'b1;
-                            cont_erros     <= '0;
-                            cont_bloqueios <= '0;
-                            state          <= ST_FECHADA_DESTRANCADA;
-                        end else if (digitos_value.digits[0] != EVT_TIMEOUT &&
-                                     digitos_value.digits[0] != KEY_HASH    &&
-                                     digitos_value.digits[0] != VAL_EMPTY) begin
-                            bip            <= 1'b1;
-                            cont_erros     <= cont_erros + 1;
-                            cont_bloqueios <= cont_bloqueios + 1;
-                            lockout_timer  <= '0;
+                            cont_erros     <= cont_erros + 1'b1;
+                            cont_bloqueios <= (cont_bloqueios < 3'd7) ? cont_bloqueios + 1'b1 : 3'd7;
+                            state_timer    <= '0;
                             state          <= ST_BLOQUEADO;
                         end
                     end
                 end
 
-                // ----------------
                 ST_AUTENTICA_CONFIG: begin
                     tranca     <= 1'b0;
                     teclado_en <= 1'b1;
-                    display_en <= 1'b0;
-                    setup_on   <= 1'b0;
 
-                    timer <= timer + 1'b1;
-                    if (timer >= T_10S) begin
-                        bip   <= 1'b1;
-                        timer <= '0;
-                        state <= ST_ABERTA_DESTRANCADA;
+                    if (state_timer >= T_10S) begin
+                        bip         <= 1'b1;
+                        state_timer <= '0;
+                        state       <= ST_ABERTA_DESTRANCADA;
                     end
                     else if (digitos_valid) begin
                         if (senha_valida(digitos_value, config_atual.senha_master)) begin
-                            bip   <= 1'b1;
-                            timer <= '0;
-                            state <= ST_MODO_CONFIG;
-                        end
-                        else if (digitos_value.digits[0] == EVT_TIMEOUT ||
-                                 digitos_value.digits[0] == KEY_HASH    ||
-                                 digitos_value.digits[0] == VAL_EMPTY) begin
-                            bip   <= 1'b1;
-                            timer <= '0;
-                            state <= ST_ABERTA_DESTRANCADA;
+                            bip         <= 1'b1;
+                            state_timer <= '0;
+                            state       <= ST_MODO_CONFIG;
                         end
                         else begin
-                            bip <= 1'b1;
+                            bip         <= 1'b1;
+                            state_timer <= '0;
+                            state       <= ST_ABERTA_DESTRANCADA;
                         end
                     end
                 end
 
-                // ----------------
                 ST_MODO_CONFIG: begin
                     tranca     <= 1'b0;
                     teclado_en <= 1'b1;
-                    display_en <= 1'b0;
                     setup_on   <= 1'b1;
-                    timer      <= '0;
-
+                    
                     if (data_setup_ok) begin
-                        setup_on <= 1'b0;
-                        bip      <= 1'b1;
-                        state    <= ST_ABERTA_DESTRANCADA;
+                        bip         <= 1'b1;
+                        state_timer <= '0;
+                        state       <= ST_ABERTA_DESTRANCADA;
                     end
                 end
 
-                // ----------------
                 ST_NAO_PERTURBE: begin
-                    tranca         <= 1'b1;
-                    teclado_en     <= 1'b0;
-                    display_en     <= 1'b0;
-                    setup_on       <= 1'b0;
-                    timer          <= '0;
-                    bcd_pac        <= '0;
-                    bloqueio_timer <= '0;
-
                     if (botao_interno_rise) begin
-                        tranca <= 1'b0;
-                        bip    <= 1'b1;
-                        state  <= ST_FECHADA_DESTRANCADA;
+                        bip         <= 1'b1;
+                        state_timer <= '0;
+                        state       <= ST_FECHADA_DESTRANCADA;
                     end
                 end
 
