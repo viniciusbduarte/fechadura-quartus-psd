@@ -1,5 +1,5 @@
 // ============================================================================
-// MÓDULO OPERACIONAL - FECHADURA ELETRÔNICA (OTIMIZADO)
+// MÓDULO OPERACIONAL - FECHADURA ELETRÔNICA
 // ============================================================================
 import projeto_types::*;
 
@@ -26,6 +26,10 @@ module operacional(
     // DEFINIÇÕES DE ESTADO DA FSM
     // ==========================================
     typedef enum logic [3:0] {
+        ST_INIT,
+        ST_AVALIA_RESET,
+        ST_RESET_PARCIAL,
+        ST_RESET_TOTAL,
         ST_FECHADA_TRANCADA,
         ST_FECHADA_DESTRANCADA,
         ST_ABERTA_DESTRANCADA,
@@ -128,90 +132,47 @@ module operacional(
     always_ff @(posedge clk) begin
         rst_prev <= rst;
 
-        // 1. GERENCIAMENTO DO RESET HARDWARE
+        // 1. GERENCIAMENTO GLOBAL DO BOTÃO DE RESET (HARDWARE)
         if (rst) begin
             if (rst_timer < 14'h3FFF) begin
                 rst_timer <= rst_timer + 1'b1;
             end
+            // Armazena o estado atual assim que o reset é pressionado
             if (!rst_prev && sistema_inicializado) begin
-                state_return <= state;
+                if (state != ST_INIT && state != ST_AVALIA_RESET && 
+                    state != ST_RESET_PARCIAL && state != ST_RESET_TOTAL) begin
+                    state_return <= state;
+                end
             end
         end
 
+        // Ao soltar o botão de reset, a máquina chaveia para a avaliação interna
         else if (rst_fall) begin
-            rst_timer    <= '0;
-            state_timer  <= '0;
-            hold_timer   <= '0;
-            
-            if (rst_timer >= T_10S) begin
-                config_atual.bip_status          <= 1'b1;
-                config_atual.bip_time            <= 6'd5;
-                config_atual.tranca_aut_time     <= 6'd5;
-                config_atual.senha_master.digits <= 48'hFFFFFFFF1234;
-                config_atual.senha_1.digits      <= {12{4'hF}};
-                config_atual.senha_2.digits      <= {12{4'hF}};
-                config_atual.senha_3.digits      <= {12{4'hF}};
-                config_atual.senha_4.digits      <= {12{4'hF}};
-                cont_erros     <= '0;
-                cont_bloqueios <= '0;
-                state          <= sistema_inicializado ? state_return : ST_FECHADA_TRANCADA;
-                sistema_inicializado <= 1'b1;
-            end
-            else if (rst_timer >= T_5S) begin
-                config_atual.senha_1.digits <= {12{4'hF}};
-                config_atual.senha_2.digits <= {12{4'hF}};
-                config_atual.senha_3.digits <= {12{4'hF}};
-                config_atual.senha_4.digits <= {12{4'hF}};
-                cont_erros     <= '0;
-                cont_bloqueios <= '0;
-                state          <= sistema_inicializado ? state_return : ST_FECHADA_TRANCADA;
-                sistema_inicializado <= 1'b1;
-            end
-            else if (!sistema_inicializado) begin
-                state                            <= ST_FECHADA_TRANCADA;
-                sistema_inicializado             <= 1'b1;
-                config_atual.bip_status          <= 1'b1;
-                config_atual.bip_time            <= 6'd5;
-                config_atual.tranca_aut_time     <= 6'd5;
-                config_atual.senha_master.digits <= 48'hFFFFFFFF1234;
-                config_atual.senha_1.digits      <= {12{4'hF}};
-                config_atual.senha_2.digits      <= {12{4'hF}};
-                config_atual.senha_3.digits      <= {12{4'hF}};
-                config_atual.senha_4.digits      <= {12{4'hF}};
-                cont_erros     <= '0;
-                cont_bloqueios <= '0;
-            end
+            state <= ST_AVALIA_RESET;
         end
 
-        // 2. OPERAÇÃO NORMAL DA MALHA DE CONTROLE
+        // 2. OPERAÇÃO DA MALH  A DE ESTADOS
         else begin
-            if (!sistema_inicializado) begin
-                state                <= ST_FECHADA_TRANCADA;
-                state_return         <= ST_FECHADA_TRANCADA;
-                sistema_inicializado <= 1'b1;
-                hold_timer           <= '0;
-                cont_erros           <= '0;
-                cont_bloqueios       <= '0;
-                state_timer          <= '0;
-                inactivity_timer     <= '0;
-                config_atual.bip_status          <= 1'b1;
-                config_atual.bip_time            <= 6'd5;
-                config_atual.tranca_aut_time     <= 6'd5;
-                config_atual.senha_master.digits <= 48'hFFFFFFFF1234;
-                config_atual.senha_1.digits      <= {12{4'hF}};
-                config_atual.senha_2.digits      <= {12{4'hF}};
-                config_atual.senha_3.digits      <= {12{4'hF}};
-                config_atual.senha_4.digits      <= {12{4'hF}};
+            // Proteção de Inicialização (Cold Boot sem pressionar reset)
+            if (!sistema_inicializado && state != ST_INIT && state != ST_AVALIA_RESET && 
+                state != ST_RESET_PARCIAL && state != ST_RESET_TOTAL) begin
+                state <= ST_INIT;
             end
 
             botao_interno_prev  <= botao_interno;
             botao_config_prev   <= botao_config;
             botao_bloqueio_prev <= botao_bloqueio;
 
-            state_return <= state;
+            // Atualiza constantemente o retorno apenas se estiver em estados operacionais normais
+            if (state != ST_INIT && state != ST_AVALIA_RESET && 
+                state != ST_RESET_PARCIAL && state != ST_RESET_TOTAL) begin
+                state_return <= state;
+            end
+
             if (data_setup_ok)
                 config_atual <= data_setup_new;
 
+            // Valores Padrão de Saída (Estado Seguro)
             tranca     <= 1'b1;
             teclado_en <= 1'b0;
             display_en <= 1'b0;
@@ -223,6 +184,90 @@ module operacional(
             if (inactivity_timer < 17'h1FFFF) inactivity_timer <= inactivity_timer + 1'b1;
 
             case (state)
+                // ============================================================
+                // GERENCIAMENTO DE RESET E INICIALIZAÇÃO
+                // ============================================================
+                
+                ST_INIT: begin
+                    // Inicialização limpa e segura de todas as variáveis do sistema
+                    config_atual.bip_status          <= 1'b1;
+                    config_atual.bip_time            <= 6'd5;
+                    config_atual.tranca_aut_time     <= 6'd5;
+                    config_atual.senha_master.digits <= 48'hFFFFFFFF1234;
+                    config_atual.senha_1.digits      <= {12{4'hF}};
+                    config_atual.senha_2.digits      <= {12{4'hF}};
+                    config_atual.senha_3.digits      <= {12{4'hF}};
+                    config_atual.senha_4.digits      <= {12{4'hF}};
+                    
+                    cont_erros       <= '0;
+                    cont_bloqueios   <= '0;
+                    hold_timer       <= '0;
+                    state_timer      <= '0;
+                    inactivity_timer <= '0;
+                    rst_timer        <= '0;
+                    
+                    sistema_inicializado <= 1'b1;
+                    state                <= ST_FECHADA_TRANCADA;
+                    state_return         <= ST_FECHADA_TRANCADA;
+                end
+
+                ST_AVALIA_RESET: begin
+                    state_timer <= '0;
+                    hold_timer  <= '0;
+                    
+                    if (rst_timer >= T_10S) begin
+                        state <= ST_RESET_TOTAL;
+                    end
+                    else if (rst_timer >= T_5S) begin
+                        state <= ST_RESET_PARCIAL;
+                    end
+                    else begin
+                        // Se o reset foi menor que 5s, descarta e retorna
+                        rst_timer <= '0;
+                        state     <= sistema_inicializado ? state_return : ST_INIT;
+                    end
+                end
+
+                ST_RESET_PARCIAL: begin
+                    // Apaga senhas normais de usuários e limpa erros acumulados
+                    config_atual.senha_1.digits <= {12{4'hF}};
+                    config_atual.senha_2.digits <= {12{4'hF}};
+                    config_atual.senha_3.digits <= {12{4'hF}};
+                    config_atual.senha_4.digits <= {12{4'hF}};
+                    
+                    cont_erros       <= '0;
+                    cont_bloqueios   <= '0;
+                    state_timer      <= '0;
+                    rst_timer        <= '0;
+                    
+                    sistema_inicializado <= 1'b1;
+                    state                <= state_return; // Retorno ao estado anterior
+                end
+
+                ST_RESET_TOTAL: begin
+                    // Restaura configurações de fábrica na totalidade
+                    config_atual.bip_status          <= 1'b1;
+                    config_atual.bip_time            <= 6'd5;
+                    config_atual.tranca_aut_time     <= 6'd5;
+                    config_atual.senha_master.digits <= 48'hFFFFFFFF1234;
+                    config_atual.senha_1.digits      <= {12{4'hF}};
+                    config_atual.senha_2.digits      <= {12{4'hF}};
+                    config_atual.senha_3.digits      <= {12{4'hF}};
+                    config_atual.senha_4.digits      <= {12{4'hF}};
+                    
+                    cont_erros       <= '0;
+                    cont_bloqueios   <= '0;
+                    state_timer      <= '0;
+                    rst_timer        <= '0;
+                    
+                    sistema_inicializado <= 1'b1;
+                    state                <= state_return; // Retorno ao estado anterior
+                end
+
+                // ============================================================
+                // ESTADOS OPERACIONAIS ORIGINAIS
+                // ============================================================
+
                 ST_FECHADA_TRANCADA: begin
                     tranca     <= 1'b1;
                     teclado_en <= 1'b1;
