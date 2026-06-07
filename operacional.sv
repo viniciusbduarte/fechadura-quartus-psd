@@ -380,7 +380,7 @@ module operacional(
                     bcd_pac    <= '{default: SEG_DASH};
 
                     // Controla o efeito piscando do display durante os primeiros 15 segundos
-                    display_en <= (state_timer < T_15S) ? blink_1hz : 1'b0;
+                    display_en <=  state_timer[8];
 
                     // Se passar 60 segundos sem ação nenhuma, limpa os históricos de erro
                     if (inactivity_timer >= T_60S) begin
