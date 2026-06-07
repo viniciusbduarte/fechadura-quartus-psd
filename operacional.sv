@@ -4,7 +4,7 @@
 import projeto_types::*;
 
 module operacional(
-    input  logic        clk,              // Base de tempo esperada: 1 kHz (1ms)
+    input  logic        clk,
     input  logic        rst,
     input  logic        sensor_contato,
     input  logic        botao_interno,
@@ -37,9 +37,6 @@ module operacional(
         ST_NAO_PERTURBE
     } state_t;
 
-    // ==========================================
-    // CONSTANTES
-    // ==========================================
     localparam logic [3:0] KEY_HASH    = 4'hB;
     localparam logic [3:0] EVT_TIMEOUT = 4'hE;
     localparam logic [3:0] VAL_EMPTY   = 4'hF;
@@ -49,12 +46,8 @@ module operacional(
     localparam int T_3S   = 3000;
     localparam int T_5S   = 5000;
     localparam int T_10S  = 10000;
-    localparam int T_15S  = 15000;
     localparam int T_60S  = 60000;
 
-    // ==========================================
-    // REGISTRADORES INTERNOS OTIMIZADOS
-    // ==========================================
     state_t    state;
     state_t    state_return;
     setupPac_t config_atual;
@@ -62,19 +55,13 @@ module operacional(
     logic [13:0] rst_timer;
     logic        rst_prev;
 
-    // Contadores de erro e bloqueio
     logic [2:0] cont_erros;
     logic [2:0] cont_bloqueios;
 
-    // Gerenciamento de Tempo Otimizado (Reduzido de 5 para 3 contadores)
-    logic [16:0] state_timer;         // Timer genérico para durações de estados
-    logic [16:0] inactivity_timer;    // Janela de 60s para reset de penalidades
-    logic [11:0] hold_timer;          // Contador para detecção de botão pressionado (3s)
-    logic [5:0]  lockout_time_sec;    // Duração do bloqueio dinâmico
-
-    // Controle de blink de 1Hz integrado
-    logic [9:0]  blink_counter;
-    logic        blink_1hz;
+    logic [16:0] state_timer;
+    logic [16:0] inactivity_timer;
+    logic [11:0] hold_timer;
+    logic [5:0]  lockout_time_sec;
 
     logic botao_interno_prev;
     logic botao_config_prev;
@@ -92,9 +79,6 @@ module operacional(
 
     bit sistema_inicializado;
 
-    // ==========================================
-    // LÓGICA COMBINACIONAL (Tempo de Bloqueio)
-    // ==========================================
     always_comb begin
         case (cont_bloqueios)
             3'd1:    lockout_time_sec = 6'd5;
@@ -103,9 +87,6 @@ module operacional(
         endcase
     end
 
-    // ==========================================
-    // FUNÇÕES DE VALIDAÇÃO DE SENHA
-    // ==========================================
     function automatic logic senha_valida(
         input digitosPac_t entrada,
         input senhaPac_t   alvo
@@ -142,7 +123,7 @@ module operacional(
     endfunction
 
     // ============================================================================
-    // FSM PRINCIPAL + SISTEMA DE CONTROLE
+    // FSM PRINCIPAL E LÓGICA DE CONTROLE
     // ============================================================================
     always_ff @(posedge clk) begin
         rst_prev <= rst;
@@ -197,7 +178,7 @@ module operacional(
                 config_atual.senha_2.digits      <= {12{4'hF}};
                 config_atual.senha_3.digits      <= {12{4'hF}};
                 config_atual.senha_4.digits      <= {12{4'hF}};
-              cont_erros     <= '0;
+                cont_erros     <= '0;
                 cont_bloqueios <= '0;
             end
         end
@@ -223,7 +204,6 @@ module operacional(
                 config_atual.senha_4.digits      <= {12{4'hF}};
             end
 
-            // Amostragem de bordas
             botao_interno_prev  <= botao_interno;
             botao_config_prev   <= botao_config;
             botao_bloqueio_prev <= botao_bloqueio;
@@ -232,7 +212,6 @@ module operacional(
             if (data_setup_ok)
                 config_atual <= data_setup_new;
 
-            // Atribuições default seguras (Evita latches)
             tranca     <= 1'b1;
             teclado_en <= 1'b0;
             display_en <= 1'b0;
@@ -240,28 +219,14 @@ module operacional(
             bcd_pac    <= '0;
             bip        <= 1'b0;
 
-            // Incremento contínuo dos timers com proteção contra overflow
             if (state_timer < 17'h1FFFF)      state_timer <= state_timer + 1'b1;
             if (inactivity_timer < 17'h1FFFF) inactivity_timer <= inactivity_timer + 1'b1;
 
-            // Gerador de onda quadrada estável de 1Hz (base de tempo de 1ms)
-            if (blink_counter >= 999) begin
-                blink_counter <= '0;
-            end else begin
-                blink_counter <= blink_counter + 1'b1;
-            end
-            if (blink_counter == 500) begin
-                blink_1hz <= ~blink_1hz;
-            end
-
-            // MÁQUINA DE ESTADOS (FSM)
             case (state)
-
                 ST_FECHADA_TRANCADA: begin
                     tranca     <= 1'b1;
                     teclado_en <= 1'b1;
 
-                    // Limpa erros se a porta ficar inativa por 60s contínuos
                     if (inactivity_timer >= T_60S) begin
                         cont_erros <= '0;
                     end
@@ -281,10 +246,10 @@ module operacional(
                         end
                     end
                     else begin
-                        hold_timer <= '0; // Zera se o botão for solto antes dos 3s
+                        hold_timer <= '0;
                         
                         if (digitos_valid) begin
-                            inactivity_timer <= '0; // Reset por atividade no teclado
+                            inactivity_timer <= '0;
                             
                             if (qualquer_senha_valida(digitos_value, config_atual)) begin
                                 bip            <= 1'b1;
@@ -298,9 +263,9 @@ module operacional(
                                      digitos_value.digits[0] == VAL_EMPTY) begin
                                 state <= ST_FECHADA_TRANCADA;
                             end
-                            else begin // Senha Incorreta
+                            else begin
                                 bip <= 1'b1;
-                                if (cont_erros >= 3'd4) begin // 5ª falha consecutiva
+                                if (cont_erros >= 3'd4) begin
                                     cont_bloqueios   <= (cont_bloqueios < 3'd7) ? cont_bloqueios + 1'b1 : 3'd7;
                                     state_timer      <= '0;
                                     state            <= ST_BLOQUEADO;
@@ -370,7 +335,7 @@ module operacional(
 
                     if (state_timer >= ({11'b0, lockout_time_sec} * T_1S)) begin
                         state_timer      <= '0;
-                        inactivity_timer <= '0; // Reseta no momento exato do desbloqueio
+                        inactivity_timer <= '0;
                         state            <= ST_TENTATIVA_LIBERADA;
                     end
                 end
@@ -378,16 +343,13 @@ module operacional(
                 ST_TENTATIVA_LIBERADA: begin
                     teclado_en <= 1'b1;
                     bcd_pac    <= '{default: SEG_DASH};
+                    display_en <= state_timer[8];
 
-                    // Controla o efeito piscando do display durante os primeiros 15 segundos
-                    display_en <=  state_timer[8];
-
-                    // Se passar 60 segundos sem ação nenhuma, limpa os históricos de erro
                     if (inactivity_timer >= T_60S) begin
-                        cont_erros  <= '0;
+                        cont_erros     <= '0;
                         cont_bloqueios <= '0;
-                        state_timer <= '0;
-                        state       <= ST_FECHADA_TRANCADA;
+                        state_timer    <= '0;
+                        state          <= ST_FECHADA_TRANCADA;
                     end
                     else if (botao_interno_rise) begin
                         cont_erros     <= '0;
@@ -408,9 +370,9 @@ module operacional(
                         else if (digitos_value.digits[0] == EVT_TIMEOUT ||
                                  digitos_value.digits[0] == KEY_HASH    ||
                                  digitos_value.digits[0] == VAL_EMPTY) begin
-                            state_timer <= '0; // Reinicia janela de 15s piscando por segurança
+                            state_timer <= '0;
                         end
-                        else begin // Erro imediato durante período de graça reinicia o bloqueio severo
+                        else begin
                             bip            <= 1'b1;
                             cont_erros     <= cont_erros + 1'b1;
                             cont_bloqueios <= (cont_bloqueios < 3'd7) ? cont_bloqueios + 1'b1 : 3'd7;
