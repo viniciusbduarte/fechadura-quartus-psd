@@ -46,6 +46,7 @@ module operacional(
     localparam logic [3:0] EVT_TIMEOUT = 4'hE;
     localparam logic [3:0] VAL_EMPTY   = 4'hF;
     localparam logic [3:0] SEG_DASH    = 4'hA;
+    localparam logic [3:0] VAL_VOID    = 4'hC;
 
     localparam int T_1S   = 1000;
     localparam int T_3S   = 3000;
@@ -368,12 +369,12 @@ module operacional(
 
                 ST_ACESSO_NEGADO: begin
                     display_en   <= 1'b1;
-                    bcd_pac.BCD0 <= (cont_erros >= 3'd1) ? SEG_DASH : VAL_EMPTY;
-                    bcd_pac.BCD1 <= (cont_erros >= 3'd2) ? SEG_DASH : VAL_EMPTY;
-                    bcd_pac.BCD2 <= (cont_erros >= 3'd3) ? SEG_DASH : VAL_EMPTY;
-                    bcd_pac.BCD3 <= (cont_erros >= 3'd4) ? SEG_DASH : VAL_EMPTY;
-                    bcd_pac.BCD4 <= (cont_erros >= 3'd5) ? SEG_DASH : VAL_EMPTY;
-                    bcd_pac.BCD5 <= (cont_erros >= 3'd5) ? SEG_DASH : VAL_EMPTY;
+                    bcd_pac.BCD0 <= (cont_erros >= 3'd1) ? SEG_DASH : VAL_VOID;
+                    bcd_pac.BCD1 <= (cont_erros >= 3'd2) ? SEG_DASH : VAL_VOID;
+                    bcd_pac.BCD2 <= (cont_erros >= 3'd3) ? SEG_DASH : VAL_VOID;
+                    bcd_pac.BCD3 <= (cont_erros >= 3'd4) ? SEG_DASH : VAL_VOID;
+                    bcd_pac.BCD4 <= (cont_erros >= 3'd5) ? SEG_DASH : VAL_VOID;
+                    bcd_pac.BCD5 <= (cont_erros >= 3'd5) ? SEG_DASH : VAL_VOID;
                     
                     // DETECÇÃO DE ARROMBAMENTO
                     if (!sensor_contato) begin

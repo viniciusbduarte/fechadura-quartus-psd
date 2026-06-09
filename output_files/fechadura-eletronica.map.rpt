@@ -1,5 +1,5 @@
 Analysis & Synthesis report for fechadura-eletronica
-Sun Jun  7 13:47:11 2026
+Tue Jun  9 15:54:04 2026
 Quartus Prime Version 25.1std.0 Build 1129 10/21/2025 SC Lite Edition
 
 
@@ -67,13 +67,13 @@ on the Quartus Prime software download page.
 +-----------------------------------------------------------------------------------+
 ; Analysis & Synthesis Summary                                                      ;
 +---------------------------------+-------------------------------------------------+
-; Analysis & Synthesis Status     ; Successful - Sun Jun  7 13:47:11 2026           ;
+; Analysis & Synthesis Status     ; Successful - Tue Jun  9 15:54:04 2026           ;
 ; Quartus Prime Version           ; 25.1std.0 Build 1129 10/21/2025 SC Lite Edition ;
 ; Revision Name                   ; fechadura-eletronica                            ;
 ; Top-level Entity Name           ; DE1_SOC_golden_top                              ;
 ; Family                          ; Cyclone V                                       ;
 ; Logic utilization (in ALMs)     ; N/A                                             ;
-; Total registers                 ; 948                                             ;
+; Total registers                 ; 949                                             ;
 ; Total pins                      ; 241                                             ;
 ; Total virtual pins              ; 0                                               ;
 ; Total block memory bits         ; 0                                               ;
@@ -230,25 +230,25 @@ on the Quartus Prime software download page.
 +---------------------------------------------+----------------------+
 ; Resource                                    ; Usage                ;
 +---------------------------------------------+----------------------+
-; Estimate of Logic utilization (ALMs needed) ; 2330                 ;
+; Estimate of Logic utilization (ALMs needed) ; 2316                 ;
 ;                                             ;                      ;
-; Combinational ALUT usage for logic          ; 3214                 ;
-;     -- 7 input functions                    ; 10                   ;
-;     -- 6 input functions                    ; 1398                 ;
-;     -- 5 input functions                    ; 149                  ;
-;     -- 4 input functions                    ; 350                  ;
-;     -- <=3 input functions                  ; 1307                 ;
+; Combinational ALUT usage for logic          ; 3191                 ;
+;     -- 7 input functions                    ; 5                    ;
+;     -- 6 input functions                    ; 1396                 ;
+;     -- 5 input functions                    ; 157                  ;
+;     -- 4 input functions                    ; 317                  ;
+;     -- <=3 input functions                  ; 1316                 ;
 ;                                             ;                      ;
-; Dedicated logic registers                   ; 948                  ;
+; Dedicated logic registers                   ; 949                  ;
 ;                                             ;                      ;
 ; I/O pins                                    ; 241                  ;
 ;                                             ;                      ;
 ; Total DSP Blocks                            ; 3                    ;
 ;                                             ;                      ;
 ; Maximum fan-out node                        ; divfreq:my_div|clk_i ;
-; Maximum fan-out                             ; 916                  ;
-; Total fan-out                               ; 17162                ;
-; Average fan-out                             ; 3.62                 ;
+; Maximum fan-out                             ; 917                  ;
+; Total fan-out                               ; 17049                ;
+; Average fan-out                             ; 3.61                 ;
 +---------------------------------------------+----------------------+
 
 
@@ -257,18 +257,18 @@ on the Quartus Prime software download page.
 +-------------------------------------------+---------------------+---------------------------+-------------------+------------+------+--------------+------------------------------------------------------------------------------------------------------------------------------------+--------------------------+--------------+
 ; Compilation Hierarchy Node                ; Combinational ALUTs ; Dedicated Logic Registers ; Block Memory Bits ; DSP Blocks ; Pins ; Virtual Pins ; Full Hierarchy Name                                                                                                                ; Entity Name              ; Library Name ;
 +-------------------------------------------+---------------------+---------------------------+-------------------+------------+------+--------------+------------------------------------------------------------------------------------------------------------------------------------+--------------------------+--------------+
-; |DE1_SOC_golden_top                       ; 3214 (31)           ; 948 (0)                   ; 0                 ; 3          ; 241  ; 0            ; |DE1_SOC_golden_top                                                                                                                ; DE1_SOC_golden_top       ; work         ;
+; |DE1_SOC_golden_top                       ; 3191 (12)           ; 949 (0)                   ; 0                 ; 3          ; 241  ; 0            ; |DE1_SOC_golden_top                                                                                                                ; DE1_SOC_golden_top       ; work         ;
 ;    |debounce:my_sw1|                      ; 40 (40)             ; 33 (33)                   ; 0                 ; 0          ; 0    ; 0            ; |DE1_SOC_golden_top|debounce:my_sw1                                                                                                ; debounce                 ; work         ;
 ;    |debounce:my_sw2|                      ; 40 (40)             ; 33 (33)                   ; 0                 ; 0          ; 0    ; 0            ; |DE1_SOC_golden_top|debounce:my_sw2                                                                                                ; debounce                 ; work         ;
 ;    |debounce:my_sw3|                      ; 40 (40)             ; 33 (33)                   ; 0                 ; 0          ; 0    ; 0            ; |DE1_SOC_golden_top|debounce:my_sw3                                                                                                ; debounce                 ; work         ;
 ;    |debounce:my_sw4|                      ; 40 (40)             ; 33 (33)                   ; 0                 ; 0          ; 0    ; 0            ; |DE1_SOC_golden_top|debounce:my_sw4                                                                                                ; debounce                 ; work         ;
 ;    |decodificador_de_teclado:my_teclado|  ; 138 (138)           ; 152 (152)                 ; 0                 ; 0          ; 0    ; 0            ; |DE1_SOC_golden_top|decodificador_de_teclado:my_teclado                                                                            ; decodificador_de_teclado ; work         ;
 ;    |divfreq:my_div|                       ; 41 (41)             ; 33 (33)                   ; 0                 ; 0          ; 0    ; 0            ; |DE1_SOC_golden_top|divfreq:my_div                                                                                                 ; divfreq                  ; work         ;
-;    |operacional:my_operacional|           ; 2702 (2702)         ; 361 (361)                 ; 0                 ; 3          ; 0    ; 0            ; |DE1_SOC_golden_top|operacional:my_operacional                                                                                     ; operacional              ; work         ;
-;    |segment7:CONV_0|                      ; 7 (7)               ; 0 (0)                     ; 0                 ; 0          ; 0    ; 0            ; |DE1_SOC_golden_top|segment7:CONV_0                                                                                                ; segment7                 ; work         ;
-;    |segment7:CONV_1|                      ; 7 (7)               ; 0 (0)                     ; 0                 ; 0          ; 0    ; 0            ; |DE1_SOC_golden_top|segment7:CONV_1                                                                                                ; segment7                 ; work         ;
-;    |segment7:CONV_2|                      ; 7 (7)               ; 0 (0)                     ; 0                 ; 0          ; 0    ; 0            ; |DE1_SOC_golden_top|segment7:CONV_2                                                                                                ; segment7                 ; work         ;
-;    |segment7:CONV_3|                      ; 7 (7)               ; 0 (0)                     ; 0                 ; 0          ; 0    ; 0            ; |DE1_SOC_golden_top|segment7:CONV_3                                                                                                ; segment7                 ; work         ;
+;    |operacional:my_operacional|           ; 2705 (2705)         ; 362 (362)                 ; 0                 ; 3          ; 0    ; 0            ; |DE1_SOC_golden_top|operacional:my_operacional                                                                                     ; operacional              ; work         ;
+;    |segment7:CONV_0|                      ; 6 (6)               ; 0 (0)                     ; 0                 ; 0          ; 0    ; 0            ; |DE1_SOC_golden_top|segment7:CONV_0                                                                                                ; segment7                 ; work         ;
+;    |segment7:CONV_1|                      ; 5 (5)               ; 0 (0)                     ; 0                 ; 0          ; 0    ; 0            ; |DE1_SOC_golden_top|segment7:CONV_1                                                                                                ; segment7                 ; work         ;
+;    |segment7:CONV_2|                      ; 5 (5)               ; 0 (0)                     ; 0                 ; 0          ; 0    ; 0            ; |DE1_SOC_golden_top|segment7:CONV_2                                                                                                ; segment7                 ; work         ;
+;    |segment7:CONV_3|                      ; 5 (5)               ; 0 (0)                     ; 0                 ; 0          ; 0    ; 0            ; |DE1_SOC_golden_top|segment7:CONV_3                                                                                                ; segment7                 ; work         ;
 ;    |segment7:CONV_4|                      ; 7 (7)               ; 0 (0)                     ; 0                 ; 0          ; 0    ; 0            ; |DE1_SOC_golden_top|segment7:CONV_4                                                                                                ; segment7                 ; work         ;
 ;    |segment7:CONV_5|                      ; 7 (7)               ; 0 (0)                     ; 0                 ; 0          ; 0    ; 0            ; |DE1_SOC_golden_top|segment7:CONV_5                                                                                                ; segment7                 ; work         ;
 ;    |setup:my_setup|                       ; 100 (90)            ; 270 (270)                 ; 0                 ; 0          ; 0    ; 0            ; |DE1_SOC_golden_top|setup:my_setup                                                                                                 ; setup                    ; work         ;
@@ -419,7 +419,7 @@ Encoding Type:  One-Hot
 ; setup:my_setup|state~17                                 ; Lost fanout                                                     ;
 ; setup:my_setup|state~18                                 ; Lost fanout                                                     ;
 ; setup:my_setup|state~19                                 ; Lost fanout                                                     ;
-; decodificador_de_teclado:my_teclado|digitos_valid       ; Merged with decodificador_de_teclado:my_teclado|state.ST_CLEAR  ;
+; decodificador_de_teclado:my_teclado|state.ST_CLEAR      ; Merged with decodificador_de_teclado:my_teclado|digitos_valid   ;
 ; Total Number of Removed Registers = 45                  ;                                                                 ;
 +---------------------------------------------------------+-----------------------------------------------------------------+
 
@@ -429,12 +429,12 @@ Encoding Type:  One-Hot
 +----------------------------------------------+-------+
 ; Statistic                                    ; Value ;
 +----------------------------------------------+-------+
-; Total registers                              ; 948   ;
+; Total registers                              ; 949   ;
 ; Number of registers using Synchronous Clear  ; 289   ;
 ; Number of registers using Synchronous Load   ; 17    ;
 ; Number of registers using Asynchronous Clear ; 587   ;
 ; Number of registers using Asynchronous Load  ; 0     ;
-; Number of registers using Clock Enable       ; 753   ;
+; Number of registers using Clock Enable       ; 754   ;
 ; Number of registers using Preset             ; 0     ;
 +----------------------------------------------+-------+
 
@@ -444,18 +444,8 @@ Encoding Type:  One-Hot
 +-----------------------------------------------------------------+---------+
 ; Inverted Register                                               ; Fan out ;
 +-----------------------------------------------------------------+---------+
-; decodificador_de_teclado:my_teclado|digitos_value.digits[0][1]  ; 22      ;
-; decodificador_de_teclado:my_teclado|digitos_value.digits[0][3]  ; 24      ;
-; decodificador_de_teclado:my_teclado|digitos_value.digits[1][1]  ; 20      ;
-; decodificador_de_teclado:my_teclado|digitos_value.digits[1][3]  ; 21      ;
-; decodificador_de_teclado:my_teclado|digitos_value.digits[2][1]  ; 22      ;
-; decodificador_de_teclado:my_teclado|digitos_value.digits[2][3]  ; 22      ;
-; decodificador_de_teclado:my_teclado|digitos_value.digits[3][1]  ; 29      ;
-; decodificador_de_teclado:my_teclado|digitos_value.digits[3][3]  ; 28      ;
-; decodificador_de_teclado:my_teclado|digitos_value.digits[4][1]  ; 33      ;
-; decodificador_de_teclado:my_teclado|digitos_value.digits[4][3]  ; 32      ;
-; decodificador_de_teclado:my_teclado|digitos_value.digits[5][1]  ; 37      ;
-; decodificador_de_teclado:my_teclado|digitos_value.digits[5][3]  ; 37      ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[0][1]  ; 21      ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[0][3]  ; 23      ;
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[13][3] ; 61      ;
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[13][1] ; 61      ;
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[15][3] ; 61      ;
@@ -474,6 +464,8 @@ Encoding Type:  One-Hot
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[12][1] ; 61      ;
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[14][3] ; 61      ;
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[14][1] ; 61      ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[5][3]  ; 36      ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[5][1]  ; 36      ;
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[10][3] ; 61      ;
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[10][1] ; 61      ;
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[6][3]  ; 41      ;
@@ -484,30 +476,16 @@ Encoding Type:  One-Hot
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[7][1]  ; 46      ;
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[9][3]  ; 56      ;
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[9][1]  ; 56      ;
-; decodificador_de_teclado:my_teclado|digitos_value.digits[0][0]  ; 25      ;
-; decodificador_de_teclado:my_teclado|digitos_value.digits[0][2]  ; 22      ;
-; decodificador_de_teclado:my_teclado|digitos_value.digits[1][0]  ; 20      ;
-; decodificador_de_teclado:my_teclado|digitos_value.digits[1][2]  ; 21      ;
-; decodificador_de_teclado:my_teclado|digitos_value.digits[2][0]  ; 22      ;
-; decodificador_de_teclado:my_teclado|digitos_value.digits[2][2]  ; 22      ;
-; decodificador_de_teclado:my_teclado|digitos_value.digits[3][0]  ; 28      ;
-; decodificador_de_teclado:my_teclado|digitos_value.digits[3][2]  ; 28      ;
-; decodificador_de_teclado:my_teclado|digitos_value.digits[4][0]  ; 32      ;
-; decodificador_de_teclado:my_teclado|digitos_value.digits[4][2]  ; 33      ;
-; decodificador_de_teclado:my_teclado|digitos_value.digits[5][0]  ; 37      ;
-; decodificador_de_teclado:my_teclado|digitos_value.digits[5][2]  ; 37      ;
-; decodificador_de_teclado:my_teclado|key_decoded[0]              ; 5       ;
-; decodificador_de_teclado:my_teclado|key_decoded[2]              ; 7       ;
-; decodificador_de_teclado:my_teclado|key_decoded[3]              ; 7       ;
-; decodificador_de_teclado:my_teclado|key_decoded[1]              ; 7       ;
-; decodificador_de_teclado:my_teclado|col_matriz_sync[3]          ; 3       ;
-; decodificador_de_teclado:my_teclado|col_matriz_sync[2]          ; 3       ;
-; decodificador_de_teclado:my_teclado|col_matriz_sync[1]          ; 3       ;
-; decodificador_de_teclado:my_teclado|col_matriz_sync[0]          ; 3       ;
-; decodificador_de_teclado:my_teclado|saved_col[2]                ; 10      ;
-; decodificador_de_teclado:my_teclado|saved_col[3]                ; 7       ;
-; decodificador_de_teclado:my_teclado|saved_col[0]                ; 5       ;
-; decodificador_de_teclado:my_teclado|saved_col[1]                ; 10      ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[4][3]  ; 31      ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[4][1]  ; 31      ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[3][3]  ; 27      ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[3][1]  ; 27      ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[2][3]  ; 21      ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[2][1]  ; 21      ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[1][3]  ; 20      ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[1][1]  ; 19      ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[0][0]  ; 24      ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[0][2]  ; 21      ;
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[13][2] ; 61      ;
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[13][0] ; 61      ;
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[15][2] ; 61      ;
@@ -526,6 +504,8 @@ Encoding Type:  One-Hot
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[12][2] ; 61      ;
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[14][0] ; 61      ;
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[14][2] ; 61      ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[5][0]  ; 36      ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[5][2]  ; 36      ;
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[10][0] ; 61      ;
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[10][2] ; 61      ;
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[6][0]  ; 41      ;
@@ -536,14 +516,34 @@ Encoding Type:  One-Hot
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[7][2]  ; 46      ;
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[9][0]  ; 56      ;
 ; decodificador_de_teclado:my_teclado|digitos_value.digits[9][2]  ; 56      ;
-; decodificador_de_teclado:my_teclado|saved_lin[3]                ; 8       ;
-; decodificador_de_teclado:my_teclado|saved_lin[2]                ; 5       ;
-; decodificador_de_teclado:my_teclado|saved_lin[1]                ; 7       ;
-; decodificador_de_teclado:my_teclado|saved_lin[0]                ; 9       ;
-; decodificador_de_teclado:my_teclado|col_sync_reg1[3]            ; 1       ;
-; decodificador_de_teclado:my_teclado|col_sync_reg1[2]            ; 1       ;
-; decodificador_de_teclado:my_teclado|col_sync_reg1[1]            ; 1       ;
-; decodificador_de_teclado:my_teclado|col_sync_reg1[0]            ; 1       ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[4][0]  ; 31      ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[4][2]  ; 31      ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[3][0]  ; 27      ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[3][2]  ; 27      ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[2][0]  ; 21      ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[2][2]  ; 21      ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[1][0]  ; 19      ;
+; decodificador_de_teclado:my_teclado|digitos_value.digits[1][2]  ; 20      ;
+; decodificador_de_teclado:my_teclado|key_decoded[0]              ; 5       ;
+; decodificador_de_teclado:my_teclado|key_decoded[2]              ; 7       ;
+; decodificador_de_teclado:my_teclado|key_decoded[3]              ; 7       ;
+; decodificador_de_teclado:my_teclado|key_decoded[1]              ; 7       ;
+; decodificador_de_teclado:my_teclado|col_matriz_sync[3]          ; 3       ;
+; decodificador_de_teclado:my_teclado|col_matriz_sync[2]          ; 3       ;
+; decodificador_de_teclado:my_teclado|col_matriz_sync[1]          ; 3       ;
+; decodificador_de_teclado:my_teclado|col_matriz_sync[0]          ; 3       ;
+; decodificador_de_teclado:my_teclado|saved_col[2]                ; 10      ;
+; decodificador_de_teclado:my_teclado|saved_col[3]                ; 7       ;
+; decodificador_de_teclado:my_teclado|saved_col[0]                ; 5       ;
+; decodificador_de_teclado:my_teclado|saved_col[1]                ; 10      ;
+; setup:my_setup|draft_config.senha_4.digits[3][3]                ; 1       ;
+; setup:my_setup|draft_config.senha_4.digits[3][2]                ; 1       ;
+; setup:my_setup|draft_config.senha_4.digits[3][1]                ; 1       ;
+; setup:my_setup|draft_config.senha_4.digits[3][0]                ; 1       ;
+; setup:my_setup|draft_config.senha_4.digits[2][3]                ; 1       ;
+; setup:my_setup|draft_config.senha_4.digits[2][2]                ; 1       ;
+; setup:my_setup|draft_config.senha_4.digits[2][1]                ; 1       ;
+; setup:my_setup|draft_config.senha_4.digits[2][0]                ; 1       ;
 ; Total number of inverted registers = 327*                       ;         ;
 +-----------------------------------------------------------------+---------+
 * Table truncated at 100 items. To change the number of inverted registers reported, set the "Number of Inverted Registers Reported" option under Assignments->Settings->Analysis and Synthesis Settings->More Settings
@@ -554,22 +554,22 @@ Encoding Type:  One-Hot
 +--------------------+-----------+---------------+----------------------+------------------------+------------+---------------------------------------------------------------------------------------+
 ; Multiplexer Inputs ; Bus Width ; Baseline Area ; Area if Restructured ; Saving if Restructured ; Registered ; Example Multiplexer Output                                                            ;
 +--------------------+-----------+---------------+----------------------+------------------------+------------+---------------------------------------------------------------------------------------+
-; 3:1                ; 42 bits   ; 84 LEs        ; 42 LEs               ; 42 LEs                 ; Yes        ; |DE1_SOC_golden_top|operacional:my_operacional|config_atual.senha_master.digits[8][1] ;
-; 3:1                ; 192 bits  ; 384 LEs       ; 192 LEs              ; 192 LEs                ; Yes        ; |DE1_SOC_golden_top|operacional:my_operacional|config_atual.senha_2.digits[0][2]      ;
+; 3:1                ; 42 bits   ; 84 LEs        ; 42 LEs               ; 42 LEs                 ; Yes        ; |DE1_SOC_golden_top|operacional:my_operacional|config_atual.senha_master.digits[5][1] ;
+; 3:1                ; 192 bits  ; 384 LEs       ; 192 LEs              ; 192 LEs                ; Yes        ; |DE1_SOC_golden_top|operacional:my_operacional|config_atual.senha_2.digits[1][2]      ;
 ; 3:1                ; 19 bits   ; 38 LEs        ; 0 LEs                ; 38 LEs                 ; Yes        ; |DE1_SOC_golden_top|operacional:my_operacional|config_atual.bip_time[1]               ;
-; 3:1                ; 14 bits   ; 28 LEs        ; 14 LEs               ; 14 LEs                 ; Yes        ; |DE1_SOC_golden_top|operacional:my_operacional|rst_timer[7]                           ;
-; 5:1                ; 4 bits    ; 12 LEs        ; 4 LEs                ; 8 LEs                  ; Yes        ; |DE1_SOC_golden_top|decodificador_de_teclado:my_teclado|hold_target[6]                ;
-; 8:1                ; 13 bits   ; 65 LEs        ; 0 LEs                ; 65 LEs                 ; Yes        ; |DE1_SOC_golden_top|decodificador_de_teclado:my_teclado|count_timeout[12]             ;
-; 11:1               ; 12 bits   ; 84 LEs        ; 0 LEs                ; 84 LEs                 ; Yes        ; |DE1_SOC_golden_top|decodificador_de_teclado:my_teclado|count_action[1]               ;
-; 7:1                ; 17 bits   ; 68 LEs        ; 0 LEs                ; 68 LEs                 ; Yes        ; |DE1_SOC_golden_top|operacional:my_operacional|inactivity_timer[7]                    ;
-; 13:1               ; 3 bits    ; 24 LEs        ; 12 LEs               ; 12 LEs                 ; Yes        ; |DE1_SOC_golden_top|operacional:my_operacional|cont_bloqueios[1]                      ;
-; 15:1               ; 3 bits    ; 30 LEs        ; 12 LEs               ; 18 LEs                 ; Yes        ; |DE1_SOC_golden_top|operacional:my_operacional|cont_erros[0]                          ;
-; 24:1               ; 17 bits   ; 272 LEs       ; 0 LEs                ; 272 LEs                ; Yes        ; |DE1_SOC_golden_top|operacional:my_operacional|state_timer[13]                        ;
-; 4:1                ; 3 bits    ; 6 LEs         ; 3 LEs                ; 3 LEs                  ; Yes        ; |DE1_SOC_golden_top|decodificador_de_teclado:my_teclado|lin_matriz[0]                 ;
-; 10:1               ; 80 bits   ; 480 LEs       ; 160 LEs              ; 320 LEs                ; Yes        ; |DE1_SOC_golden_top|decodificador_de_teclado:my_teclado|digitos_value.digits[2][2]    ;
+; 3:1                ; 14 bits   ; 28 LEs        ; 14 LEs               ; 14 LEs                 ; Yes        ; |DE1_SOC_golden_top|operacional:my_operacional|rst_timer[1]                           ;
+; 5:1                ; 4 bits    ; 12 LEs        ; 4 LEs                ; 8 LEs                  ; Yes        ; |DE1_SOC_golden_top|decodificador_de_teclado:my_teclado|hold_target[3]                ;
+; 8:1                ; 13 bits   ; 65 LEs        ; 0 LEs                ; 65 LEs                 ; Yes        ; |DE1_SOC_golden_top|decodificador_de_teclado:my_teclado|count_timeout[7]              ;
+; 11:1               ; 12 bits   ; 84 LEs        ; 0 LEs                ; 84 LEs                 ; Yes        ; |DE1_SOC_golden_top|decodificador_de_teclado:my_teclado|count_action[2]               ;
+; 7:1                ; 17 bits   ; 68 LEs        ; 0 LEs                ; 68 LEs                 ; Yes        ; |DE1_SOC_golden_top|operacional:my_operacional|inactivity_timer[13]                   ;
+; 13:1               ; 3 bits    ; 24 LEs        ; 12 LEs               ; 12 LEs                 ; Yes        ; |DE1_SOC_golden_top|operacional:my_operacional|cont_bloqueios[2]                      ;
+; 15:1               ; 3 bits    ; 30 LEs        ; 12 LEs               ; 18 LEs                 ; Yes        ; |DE1_SOC_golden_top|operacional:my_operacional|cont_erros[2]                          ;
+; 24:1               ; 17 bits   ; 272 LEs       ; 0 LEs                ; 272 LEs                ; Yes        ; |DE1_SOC_golden_top|operacional:my_operacional|state_timer[12]                        ;
+; 4:1                ; 3 bits    ; 6 LEs         ; 3 LEs                ; 3 LEs                  ; Yes        ; |DE1_SOC_golden_top|decodificador_de_teclado:my_teclado|lin_matriz[2]                 ;
+; 10:1               ; 80 bits   ; 480 LEs       ; 160 LEs              ; 320 LEs                ; Yes        ; |DE1_SOC_golden_top|decodificador_de_teclado:my_teclado|digitos_value.digits[6][0]    ;
+; 3:1                ; 9 bits    ; 18 LEs        ; 18 LEs               ; 0 LEs                  ; No         ; |DE1_SOC_golden_top|bcd_mux0[1]                                                       ;
+; 3:1                ; 8 bits    ; 16 LEs        ; 16 LEs               ; 0 LEs                  ; No         ; |DE1_SOC_golden_top|bcd_mux5[3]                                                       ;
 ; 3:1                ; 3 bits    ; 6 LEs         ; 6 LEs                ; 0 LEs                  ; No         ; |DE1_SOC_golden_top|decodificador_de_teclado:my_teclado|scan_prescaler                ;
-; 4:1                ; 16 bits   ; 32 LEs        ; 32 LEs               ; 0 LEs                  ; No         ; |DE1_SOC_golden_top|bcd_mux2[1]                                                       ;
-; 4:1                ; 8 bits    ; 16 LEs        ; 16 LEs               ; 0 LEs                  ; No         ; |DE1_SOC_golden_top|bcd_mux4[3]                                                       ;
 ; 4:1                ; 12 bits   ; 24 LEs        ; 24 LEs               ; 0 LEs                  ; No         ; |DE1_SOC_golden_top|operacional:my_operacional|hold_timer                             ;
 ; 5:1                ; 14 bits   ; 42 LEs        ; 28 LEs               ; 14 LEs                 ; No         ; |DE1_SOC_golden_top|operacional:my_operacional|state_return                           ;
 ; 10:1               ; 4 bits    ; 24 LEs        ; 16 LEs               ; 8 LEs                  ; No         ; |DE1_SOC_golden_top|decodificador_de_teclado:my_teclado|state                         ;
@@ -752,10 +752,10 @@ Note: In order to hide this table in the UI and the text report file, please set
 +-----------------------+-----------------------------+
 ; Type                  ; Count                       ;
 +-----------------------+-----------------------------+
-; arriav_ff             ; 948                         ;
+; arriav_ff             ; 949                         ;
 ;     CLR               ; 12                          ;
 ;     CLR SCLR          ; 167                         ;
-;     ENA               ; 274                         ;
+;     ENA               ; 275                         ;
 ;     ENA CLR           ; 343                         ;
 ;     ENA CLR SCLR      ; 65                          ;
 ;     ENA SCLR          ; 57                          ;
@@ -763,31 +763,31 @@ Note: In order to hide this table in the UI and the text report file, please set
 ;     SLD               ; 3                           ;
 ;     plain             ; 13                          ;
 ; arriav_io_obuf        ; 96                          ;
-; arriav_lcell_comb     ; 3220                        ;
+; arriav_lcell_comb     ; 3197                        ;
 ;     arith             ; 252                         ;
 ;         0 data inputs ; 1                           ;
 ;         1 data inputs ; 245                         ;
 ;         2 data inputs ; 3                           ;
 ;         3 data inputs ; 2                           ;
 ;         4 data inputs ; 1                           ;
-;     extend            ; 10                          ;
-;         7 data inputs ; 10                          ;
-;     normal            ; 2948                        ;
+;     extend            ; 5                           ;
+;         7 data inputs ; 5                           ;
+;     normal            ; 2930                        ;
 ;         0 data inputs ; 1                           ;
 ;         1 data inputs ; 40                          ;
-;         2 data inputs ; 937                         ;
-;         3 data inputs ; 74                          ;
-;         4 data inputs ; 349                         ;
-;         5 data inputs ; 149                         ;
-;         6 data inputs ; 1398                        ;
+;         2 data inputs ; 941                         ;
+;         3 data inputs ; 79                          ;
+;         4 data inputs ; 316                         ;
+;         5 data inputs ; 157                         ;
+;         6 data inputs ; 1396                        ;
 ;     shared            ; 10                          ;
 ;         0 data inputs ; 2                           ;
 ;         1 data inputs ; 8                           ;
 ; arriav_mac            ; 3                           ;
 ; boundary_port         ; 241                         ;
 ;                       ;                             ;
-; Max LUT depth         ; 12.00                       ;
-; Average LUT depth     ; 8.17                        ;
+; Max LUT depth         ; 13.00                       ;
+; Average LUT depth     ; 8.69                        ;
 +-----------------------+-----------------------------+
 
 
@@ -806,7 +806,7 @@ Note: In order to hide this table in the UI and the text report file, please set
 Info: *******************************************************************
 Info: Running Quartus Prime Analysis & Synthesis
     Info: Version 25.1std.0 Build 1129 10/21/2025 SC Lite Edition
-    Info: Processing started: Sun Jun  7 13:46:52 2026
+    Info: Processing started: Tue Jun  9 15:53:43 2026
 Info: Command: quartus_map --read_settings_files=on --write_settings_files=off fechadura-eletronica -c fechadura-eletronica
 Info (20030): Parallel compilation is enabled and will use 16 of the 16 processors detected
 Info (12021): Found 1 design units, including 1 entities, in source file divfreq.sv
@@ -873,10 +873,10 @@ Info (12128): Elaborating entity "decodificador_de_teclado" for hierarchy "decod
 Warning (10230): Verilog HDL assignment warning at decodificador_teclado.sv(175): truncated value with size 32 to match size of target (12) File: C:/Users/Vinicius Duarte/Documents/repositorios/fechadura-quartus-psd/decodificador_teclado.sv Line: 175
 Warning (10230): Verilog HDL assignment warning at decodificador_teclado.sv(192): truncated value with size 32 to match size of target (12) File: C:/Users/Vinicius Duarte/Documents/repositorios/fechadura-quartus-psd/decodificador_teclado.sv Line: 192
 Info (12128): Elaborating entity "operacional" for hierarchy "operacional:my_operacional" File: C:/Users/Vinicius Duarte/Documents/repositorios/fechadura-quartus-psd/DE1_SOC_golden_top.sv Line: 327
-Warning (10036): Verilog HDL or VHDL warning at operacional.sv(77): object "botao_bloqueio_rise" assigned a value but never read File: C:/Users/Vinicius Duarte/Documents/repositorios/fechadura-quartus-psd/operacional.sv Line: 77
-Info (10264): Verilog HDL Case Statement information at operacional.sv(88): all case item expressions in this case statement are onehot File: C:/Users/Vinicius Duarte/Documents/repositorios/fechadura-quartus-psd/operacional.sv Line: 88
-Info (12128): Elaborating entity "segment7" for hierarchy "segment7:CONV_0" File: C:/Users/Vinicius Duarte/Documents/repositorios/fechadura-quartus-psd/DE1_SOC_golden_top.sv Line: 383
-Info (12128): Elaborating entity "debounce" for hierarchy "debounce:my_sw0" File: C:/Users/Vinicius Duarte/Documents/repositorios/fechadura-quartus-psd/DE1_SOC_golden_top.sv Line: 393
+Warning (10036): Verilog HDL or VHDL warning at operacional.sv(78): object "botao_bloqueio_rise" assigned a value but never read File: C:/Users/Vinicius Duarte/Documents/repositorios/fechadura-quartus-psd/operacional.sv Line: 78
+Info (10264): Verilog HDL Case Statement information at operacional.sv(91): all case item expressions in this case statement are onehot File: C:/Users/Vinicius Duarte/Documents/repositorios/fechadura-quartus-psd/operacional.sv Line: 91
+Info (12128): Elaborating entity "segment7" for hierarchy "segment7:CONV_0" File: C:/Users/Vinicius Duarte/Documents/repositorios/fechadura-quartus-psd/DE1_SOC_golden_top.sv Line: 375
+Info (12128): Elaborating entity "debounce" for hierarchy "debounce:my_sw0" File: C:/Users/Vinicius Duarte/Documents/repositorios/fechadura-quartus-psd/DE1_SOC_golden_top.sv Line: 385
 Info (278001): Inferred 2 megafunctions from design logic
     Info (278004): Inferred divider/modulo megafunction ("lpm_divide") from the following logic: "setup:my_setup|Mod0" File: C:/Users/Vinicius Duarte/Documents/repositorios/fechadura-quartus-psd/setup.sv Line: 62
     Info (278004): Inferred divider/modulo megafunction ("lpm_divide") from the following logic: "setup:my_setup|Div0" File: C:/Users/Vinicius Duarte/Documents/repositorios/fechadura-quartus-psd/setup.sv Line: 61
@@ -1103,17 +1103,17 @@ Warning (21074): Design contains 25 input pin(s) that do not drive logic
     Warning (15610): No output dependent on input pin "TD_DATA[7]" File: C:/Users/Vinicius Duarte/Documents/repositorios/fechadura-quartus-psd/DE1_SOC_golden_top.sv Line: 229
     Warning (15610): No output dependent on input pin "TD_HS" File: C:/Users/Vinicius Duarte/Documents/repositorios/fechadura-quartus-psd/DE1_SOC_golden_top.sv Line: 230
     Warning (15610): No output dependent on input pin "TD_VS" File: C:/Users/Vinicius Duarte/Documents/repositorios/fechadura-quartus-psd/DE1_SOC_golden_top.sv Line: 232
-Info (21057): Implemented 3914 device resources after synthesis - the final resource count might be different
+Info (21057): Implemented 3892 device resources after synthesis - the final resource count might be different
     Info (21058): Implemented 32 input pins
     Info (21059): Implemented 113 output pins
     Info (21060): Implemented 96 bidirectional pins
-    Info (21061): Implemented 3670 logic cells
+    Info (21061): Implemented 3648 logic cells
     Info (21062): Implemented 3 DSP elements
 Info: Quartus Prime Analysis & Synthesis was successful. 0 errors, 242 warnings
-    Info: Peak virtual memory: 4985 megabytes
-    Info: Processing ended: Sun Jun  7 13:47:11 2026
-    Info: Elapsed time: 00:00:19
-    Info: Total CPU time (on all processors): 00:00:35
+    Info: Peak virtual memory: 4971 megabytes
+    Info: Processing ended: Tue Jun  9 15:54:04 2026
+    Info: Elapsed time: 00:00:21
+    Info: Total CPU time (on all processors): 00:00:37
 
 
 +------------------------------------------+

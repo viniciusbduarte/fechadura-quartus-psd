@@ -357,7 +357,7 @@ always_comb begin
         bcd_mux4 = {1'b0, bcd_pac_setup.BCD4};
         bcd_mux5 = {1'b0, bcd_pac_setup.BCD5};
     end
-    else if (display_en_op) begin
+    else begin
         // Modo Mensagem Operacional: Exibe dados/alertas do módulo operacional
         bcd_mux0 = {1'b0, bcd_pac_op.BCD0};
         bcd_mux1 = {1'b0, bcd_pac_op.BCD1};
@@ -366,15 +366,7 @@ always_comb begin
         bcd_mux4 = {1'b0, bcd_pac_op.BCD4};
         bcd_mux5 = {1'b0, bcd_pac_op.BCD5};
     end
-    else begin      
-        // Modo Normal: Exibe os últimos dígitos digitados no teclado
-        bcd_mux0 = {1'b0, DIGITOS_VALUE.digits[0]};
-        bcd_mux1 = {1'b0, DIGITOS_VALUE.digits[1]};
-        bcd_mux2 = {1'b0, DIGITOS_VALUE.digits[2]};
-        bcd_mux3 = {1'b0, DIGITOS_VALUE.digits[3]};
-        bcd_mux4 = {1'b0, DIGITOS_VALUE.digits[4]};
-        bcd_mux5 = {1'b0, DIGITOS_VALUE.digits[5]};
-    end
+
 end
 
 //=======================================================

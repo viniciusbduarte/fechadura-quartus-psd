@@ -3,27 +3,27 @@ Timing Analyzer Summary
 ------------------------------------------------------------
 
 Type  : Setup 'divfreq:my_div|clk_i'
-Slack : -9.312
-TNS   : -5356.959
+Slack : -8.996
+TNS   : -4774.329
 
 Type  : Setup 'CLOCK_50'
-Slack : -5.545
-TNS   : -128.302
-
-Type  : Hold 'divfreq:my_div|clk_i'
-Slack : 0.416
-TNS   : 0.000
+Slack : -5.405
+TNS   : -113.264
 
 Type  : Hold 'CLOCK_50'
-Slack : 0.447
+Slack : 0.258
+TNS   : 0.000
+
+Type  : Hold 'divfreq:my_div|clk_i'
+Slack : 0.269
 TNS   : 0.000
 
 Type  : Minimum Pulse Width 'divfreq:my_div|clk_i'
 Slack : -2.225
-TNS   : -681.467
+TNS   : -670.002
 
 Type  : Minimum Pulse Width 'CLOCK_50'
-Slack : -0.677
-TNS   : -29.292
+Slack : -0.638
+TNS   : -28.351
 
 ------------------------------------------------------------

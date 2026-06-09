@@ -1,5 +1,5 @@
 Assembler report for fechadura-eletronica
-Sun Jun  7 14:10:47 2026
+Tue Jun  9 16:06:36 2026
 Quartus Prime Version 25.1std.0 Build 1129 10/21/2025 SC Lite Edition
 
 
@@ -38,7 +38,7 @@ on the Quartus Prime software download page.
 +---------------------------------------------------------------+
 ; Assembler Summary                                             ;
 +-----------------------+---------------------------------------+
-; Assembler Status      ; Successful - Sun Jun  7 14:10:47 2026 ;
+; Assembler Status      ; Successful - Tue Jun  9 16:06:36 2026 ;
 ; Revision Name         ; fechadura-eletronica                  ;
 ; Top-level Entity Name ; DE1_SOC_golden_top                    ;
 ; Family                ; Cyclone V                             ;
@@ -67,8 +67,8 @@ on the Quartus Prime software download page.
 +----------------+----------------------------------------------------------------------------------------------------------------------+
 ; Option         ; Setting                                                                                                              ;
 +----------------+----------------------------------------------------------------------------------------------------------------------+
-; JTAG usercode  ; 0x010AA1F5                                                                                                           ;
-; Checksum       ; 0x010AA1F5                                                                                                           ;
+; JTAG usercode  ; 0x010A76B6                                                                                                           ;
+; Checksum       ; 0x010A76B6                                                                                                           ;
 +----------------+----------------------------------------------------------------------------------------------------------------------+
 
 
@@ -78,13 +78,13 @@ on the Quartus Prime software download page.
 Info: *******************************************************************
 Info: Running Quartus Prime Assembler
     Info: Version 25.1std.0 Build 1129 10/21/2025 SC Lite Edition
-    Info: Processing started: Sun Jun  7 14:10:40 2026
+    Info: Processing started: Tue Jun  9 16:06:25 2026
 Info: Command: quartus_asm --read_settings_files=off --write_settings_files=off fechadura-eletronica -c fechadura-eletronica
 Info (115030): Assembler is generating device programming files
 Info: Quartus Prime Assembler was successful. 0 errors, 0 warnings
     Info: Peak virtual memory: 5266 megabytes
-    Info: Processing ended: Sun Jun  7 14:10:47 2026
-    Info: Elapsed time: 00:00:07
+    Info: Processing ended: Tue Jun  9 16:06:36 2026
+    Info: Elapsed time: 00:00:11
     Info: Total CPU time (on all processors): 00:00:07
 
 
