@@ -38,7 +38,8 @@ module operacional(
         ST_TENTATIVA_LIBERADA,
         ST_AUTENTICA_CONFIG,
         ST_MODO_CONFIG,
-        ST_NAO_PERTURBE
+        ST_NAO_PERTURBE,
+        ST_ALARME
     } state_t;
 
     localparam logic [3:0] KEY_HASH    = 4'hB;
@@ -165,7 +166,8 @@ module operacional(
 
             // Atualiza constantemente o retorno apenas se estiver em estados operacionais normais
             if (state != ST_INIT && state != ST_AVALIA_RESET && 
-                state != ST_RESET_PARCIAL && state != ST_RESET_TOTAL) begin
+                state != ST_RESET_PARCIAL && state != ST_RESET_TOTAL &&
+                state != ST_ALARME && state != ST_BLOQUEADO && state != ST_ACESSO_NEGADO) begin
                 state_return <= state;
             end
 
@@ -272,7 +274,12 @@ module operacional(
                     tranca     <= 1'b1;
                     teclado_en <= 1'b1;
 
-                    if (inactivity_timer >= T_60S) begin
+                    // DETECÇÃO DE ARROMBAMENTO
+                    if (!sensor_contato) begin
+                        state_timer <= '0;
+                        state       <= ST_ALARME;
+                    end
+                    else if (inactivity_timer >= T_60S) begin
                         cont_erros <= '0;
                     end
 
@@ -367,8 +374,13 @@ module operacional(
                     bcd_pac.BCD3 <= (cont_erros >= 3'd4) ? SEG_DASH : VAL_EMPTY;
                     bcd_pac.BCD4 <= (cont_erros >= 3'd5) ? SEG_DASH : VAL_EMPTY;
                     bcd_pac.BCD5 <= (cont_erros >= 3'd5) ? SEG_DASH : VAL_EMPTY;
-
-                    if (state_timer >= T_1S) begin
+                    
+                    // DETECÇÃO DE ARROMBAMENTO
+                    if (!sensor_contato) begin
+                        state_timer <= '0;
+                        state       <= ST_ALARME;
+                    end 
+                    else if (state_timer >= T_1S) begin
                         state_timer <= '0;
                         state       <= ST_FECHADA_TRANCADA;
                     end
@@ -378,7 +390,12 @@ module operacional(
                     display_en <= 1'b1;
                     bcd_pac    <= '{default: SEG_DASH};
 
-                    if (state_timer >= ({11'b0, lockout_time_sec} * T_1S)) begin
+                    // DETECÇÃO DE ARROMBAMENTO
+                    if (!sensor_contato) begin
+                        state_timer <= '0;
+                        state       <= ST_ALARME;
+                    end
+                    else if (state_timer >= ({11'b0, lockout_time_sec} * T_1S)) begin
                         state_timer      <= '0;
                         inactivity_timer <= '0;
                         state            <= ST_TENTATIVA_LIBERADA;
@@ -390,7 +407,12 @@ module operacional(
                     bcd_pac    <= '{default: SEG_DASH};
                     display_en <= state_timer[8];
 
-                    if (inactivity_timer >= T_60S) begin
+                    // DETECÇÃO DE ARROMBAMENTO
+                    if (!sensor_contato) begin
+                        state_timer <= '0;
+                        state       <= ST_ALARME;
+                    end
+                    else if (inactivity_timer >= T_60S) begin
                         cont_erros     <= '0;
                         cont_bloqueios <= '0;
                         state_timer    <= '0;
@@ -463,14 +485,37 @@ module operacional(
                 end
 
                 ST_NAO_PERTURBE: begin
-                    if (botao_interno_rise) begin
+                    // DETECÇÃO DE ARROMBAMENTO
+                    if (!sensor_contato) begin
+                        state_timer <= '0;
+                        state       <= ST_ALARME;
+                    end
+                    else if (botao_interno_rise) begin
                         bip         <= 1'b1;
                         state_timer <= '0;
                         state       <= ST_FECHADA_DESTRANCADA;
                     end
                 end
 
-                default: state <= ST_FECHADA_TRANCADA;
+                ST_ALARME: begin
+                    teclado_en <= 1'b1;
+                    display_en <= 1'b1;
+                    bcd_pac    <= '{default: SEG_DASH};
+                    
+                    bip <= state_timer[8]; 
+
+                    // Só sai do alarme se digitar a senha master válida
+                    if (digitos_valid) begin
+                        if (senha_valida(digitos_value, config_atual.senha_master)) begin
+                            cont_erros   <= '0;
+                            state_timer  <= '0;
+                            state        <= ST_ABERTA_DESTRANCADA;
+                        end
+                    end
+                end
+
+
+                default: state <= ST_INIT; // Estado de segurança para casos não previstos
             endcase
         end
     end
