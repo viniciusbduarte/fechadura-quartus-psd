@@ -57,8 +57,8 @@ module operacional(
     localparam int T_60S  = 60000;
 
     // MODIFICAÇÃO 1: Inicialização explícita de registradores para o Power-Up do FPGA
-    state_t    state = ST_INIT;
-    state_t    state_return = ST_FECHADA_TRANCADA;
+    state_t    state;
+    state_t    state_return;
     setupPac_t config_atual;
 
     // Temporizadores e Contadores de Sinais Externos
@@ -88,7 +88,7 @@ module operacional(
     assign rst_fall            = rst_prev & ~rst;
 
     // Flag de Controle para evitar Inicialização Falsa (Cold Boot Protection)
-    bit sistema_inicializado = 1'b0;
+    bit sistema_inicializado;
 
     // ========================================================================
     // LÓGICA COMBINATÓRIA PARA TEMPO DE LOCKOUT DINÂMICO
@@ -309,8 +309,11 @@ module operacional(
                                 state_timer    <= '0;
                                 state          <= ST_FECHADA_DESTRANCADA;
                             end
-                            else if (digitos_value.digits[0] == EVT_TIMEOUT ||
-                                     digitos_value.digits[0] == KEY_HASH    ||
+                            else if (digitos_value.digits[0] == EVT_TIMEOUT) begin
+                                bip <= 1'b1;
+                                state <= ST_FECHADA_TRANCADA;
+                            end
+                            else if (digitos_value.digits[0] == KEY_HASH    ||
                                      digitos_value.digits[0] == VAL_EMPTY) begin
                                 state <= ST_FECHADA_TRANCADA; 
                             end
@@ -430,8 +433,11 @@ module operacional(
                             state_timer    <= '0;
                             state          <= ST_FECHADA_DESTRANCADA;
                         end
-                        else if (digitos_value.digits[0] == EVT_TIMEOUT ||
-                                 digitos_value.digits[0] == KEY_HASH    ||
+                        else if (digitos_value.digits[0] == EVT_TIMEOUT) begin
+                            bip <= 1'b1;
+                            state_timer <= '0;
+                        end
+                        else if (digitos_value.digits[0] == KEY_HASH    ||
                                  digitos_value.digits[0] == VAL_EMPTY) begin
                             state_timer <= '0;
                         end
