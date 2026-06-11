@@ -101,7 +101,7 @@ module operacional(
     assign botao_bloqueio_rise = botao_bloqueio & ~botao_bloqueio_prev;
     assign rst_fall            = rst_prev & ~rst;
 
-    bit sistema_inicializado;
+    logic sistema_inicializado;
 
     always_comb begin
         case (cont_bloqueios)
@@ -153,7 +153,7 @@ module operacional(
         rst_prev <= rst;
 
         // ────────────────────────────────────────────────────────────────────
-        // 1. GERENCIAMENTO GLOBAL DO BOTÃO DE RESET (HARDWARE)
+        // 1. GERENCIAMENTO GLOBAL DO BOTÃO DE RESET (HARDWARE) @vini, sei q vc botou em borda de descida, mas a lógica nao faz muito sentido
         // ────────────────────────────────────────────────────────────────────
         if (rst) begin
             if (rst_timer < 14'h3FFF)
@@ -241,7 +241,7 @@ module operacional(
                     if (rst_timer >= T_10S) begin
                         state <= ST_RESET_TOTAL;
                     end
-                    else if (rst_timer >= T_5S) begin
+                    else if (rst_timer <= T_5S) begin
                         state <= ST_RESET_PARCIAL;
                     end
                     else begin
