@@ -1,5 +1,5 @@
 Flow report for fechadura-eletronica
-Tue Jun  9 16:06:44 2026
+Wed Jun 10 14:10:35 2026
 Quartus Prime Version 25.1std.0 Build 1129 10/21/2025 SC Lite Edition
 
 
@@ -41,15 +41,15 @@ on the Quartus Prime software download page.
 +-----------------------------------------------------------------------------------+
 ; Flow Summary                                                                      ;
 +---------------------------------+-------------------------------------------------+
-; Flow Status                     ; Successful - Tue Jun  9 16:06:36 2026           ;
+; Flow Status                     ; Successful - Wed Jun 10 14:10:28 2026           ;
 ; Quartus Prime Version           ; 25.1std.0 Build 1129 10/21/2025 SC Lite Edition ;
 ; Revision Name                   ; fechadura-eletronica                            ;
 ; Top-level Entity Name           ; DE1_SOC_golden_top                              ;
 ; Family                          ; Cyclone V                                       ;
 ; Device                          ; 5CSEMA5F31C6                                    ;
 ; Timing Models                   ; Final                                           ;
-; Logic utilization (in ALMs)     ; 2,333 / 32,070 ( 7 % )                          ;
-; Total registers                 ; 1028                                            ;
+; Logic utilization (in ALMs)     ; 2,319 / 32,070 ( 7 % )                          ;
+; Total registers                 ; 1033                                            ;
 ; Total pins                      ; 241 / 457 ( 53 % )                              ;
 ; Total virtual pins              ; 0                                               ;
 ; Total block memory bits         ; 0 / 4,065,280 ( 0 % )                           ;
@@ -68,7 +68,7 @@ on the Quartus Prime software download page.
 +-------------------+----------------------+
 ; Option            ; Setting              ;
 +-------------------+----------------------+
-; Start date & time ; 06/09/2026 15:53:43  ;
+; Start date & time ; 06/10/2026 13:52:35  ;
 ; Main task         ; Compilation          ;
 ; Revision Name     ; fechadura-eletronica ;
 +-------------------+----------------------+
@@ -79,7 +79,7 @@ on the Quartus Prime software download page.
 +--------------------------------------+----------------------------------------+----------------------+--------------------+------------+
 ; Assignment Name                      ; Value                                  ; Default Value        ; Entity Name        ; Section Id ;
 +--------------------------------------+----------------------------------------+----------------------+--------------------+------------+
-; COMPILER_SIGNATURE_ID                ; 1098130585630.178103122311764          ; --                   ; --                 ; --         ;
+; COMPILER_SIGNATURE_ID                ; 1098130585630.178111035509392          ; --                   ; --                 ; --         ;
 ; ENABLE_SIGNALTAP                     ; Off                                    ; --                   ; --                 ; --         ;
 ; MAX_CORE_JUNCTION_TEMP               ; 85                                     ; --                   ; --                 ; --         ;
 ; MIN_CORE_JUNCTION_TEMP               ; 0                                      ; --                   ; --                 ; --         ;
@@ -106,11 +106,11 @@ on the Quartus Prime software download page.
 +----------------------+--------------+-------------------------+---------------------+------------------------------------+
 ; Module Name          ; Elapsed Time ; Average Processors Used ; Peak Virtual Memory ; Total CPU Time (on all processors) ;
 +----------------------+--------------+-------------------------+---------------------+------------------------------------+
-; Analysis & Synthesis ; 00:00:20     ; 1.0                     ; 4971 MB             ; 00:00:36                           ;
-; Fitter               ; 00:12:18     ; 1.1                     ; 7993 MB             ; 01:15:30                           ;
-; Assembler            ; 00:00:11     ; 1.0                     ; 5265 MB             ; 00:00:07                           ;
-; Timing Analyzer      ; 00:00:07     ; 1.2                     ; 5099 MB             ; 00:00:06                           ;
-; Total                ; 00:12:56     ; --                      ; --                  ; 01:16:19                           ;
+; Analysis & Synthesis ; 00:00:18     ; 1.0                     ; 4984 MB             ; 00:00:35                           ;
+; Fitter               ; 00:17:24     ; 1.1                     ; 8002 MB             ; 01:54:54                           ;
+; Assembler            ; 00:00:07     ; 1.0                     ; 5265 MB             ; 00:00:07                           ;
+; Timing Analyzer      ; 00:00:06     ; 1.2                     ; 5099 MB             ; 00:00:06                           ;
+; Total                ; 00:17:55     ; --                      ; --                  ; 01:55:42                           ;
 +----------------------+--------------+-------------------------+---------------------+------------------------------------+
 
 
