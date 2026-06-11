@@ -1,22 +1,22 @@
-`include "projeto_types.sv"
+import projeto_types::*;
+
 module display (
 
     input 		logic 		clk, 
     input 		logic 		rst,
     input 		logic 		enable_o, enable_s,
-    input 		bcdPac_t 	bcd_packet_operacional, bcd_packet_setup,
+    input 		bcdPac_t 	bcd_in_op, bcd_in_setup,
     output 		logic [6:0] 	HEX0, HEX1,HEX2, HEX3, HEX4, HEX5
 );
-    import projeto_types::*;
     bcdPac_t current_bcd;
 
     always_comb begin
         if (enable_o && enable_s) begin
             current_bcd = '{default:4'd14}; // Show 'E' for error
         end else if (enable_s) begin
-            current_bcd = bcd_packet_setup;
+            current_bcd = bcd_in_setup;
         end else if (enable_o) begin
-            current_bcd = bcd_packet_operacional;
+            current_bcd = bcd_in_op;
         end else begin
             current_bcd = '{default:4'd12}; // Clear displays
         end

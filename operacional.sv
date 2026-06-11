@@ -81,12 +81,10 @@ module operacional(
     // Sinais de Borda de Subida/Descida
     wire botao_interno_rise;
     wire botao_config_rise;
-    wire botao_bloqueio_rise;
     wire rst_fall;
 
     assign botao_interno_rise  = botao_interno  & ~botao_interno_prev;
     assign botao_config_rise   = botao_config   & ~botao_config_prev;
-    assign botao_bloqueio_rise = botao_bloqueio & ~botao_bloqueio_prev;
     assign rst_fall            = rst_prev & ~rst;
 
     // Flag de Controle para evitar Inicialização Falsa (Cold Boot Protection)

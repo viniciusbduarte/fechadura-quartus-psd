@@ -1,10 +1,10 @@
-Analysis & Synthesis Status : Successful - Wed Jun 10 13:52:54 2026
+Analysis & Synthesis Status : Successful - Thu Jun 11 18:49:35 2026
 Quartus Prime Version : 25.1std.0 Build 1129 10/21/2025 SC Lite Edition
 Revision Name : fechadura-eletronica
 Top-level Entity Name : DE1_SOC_golden_top
 Family : Cyclone V
 Logic utilization (in ALMs) : N/A
-Total registers : 941
+Total registers : 809
 Total pins : 241
 Total virtual pins : 0
 Total block memory bits : 0
