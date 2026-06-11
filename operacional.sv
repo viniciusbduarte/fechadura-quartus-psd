@@ -175,9 +175,6 @@ module operacional(
             botao_config_prev   <= botao_config;
             botao_bloqueio_prev <= botao_bloqueio;
 
-            if (data_setup_ok)
-                config_atual <= data_setup_new;
-
             tranca     <= 1'b1; 
             teclado_en <= 1'b0;
             display_en <= 1'b0;
@@ -206,6 +203,11 @@ module operacional(
                     inactivity_timer <= '0;
                     rst_timer        <= '0;
                     
+                    botao_interno_prev  <= 1'b0;
+                    botao_config_prev   <= 1'b0;
+                    botao_bloqueio_prev <= 1'b0;
+                    rst_prev            <= 1'b0;
+
                     sistema_inicializado <= 1'b1;
                     state                <= ST_FECHADA_TRANCADA;
                     state_return         <= ST_FECHADA_TRANCADA;
@@ -242,10 +244,15 @@ module operacional(
                     cont_bloqueios   <= '0;
                     state_timer      <= '0;
                     rst_timer        <= '0;
+
+                    botao_interno_prev  <= 1'b0;
+                    botao_config_prev   <= 1'b0;
+                    botao_bloqueio_prev <= 1'b0;
+                    rst_prev            <= 1'b0;
                     
                     sistema_inicializado <= 1'b1;
-                    state        <= (state_return == ST_ABERTA_DESTRANCADA) ? ST_ABERTA_DESTRANCADA : ST_FECHADA_TRANCADA;
-                    state_return <= (state_return == ST_ABERTA_DESTRANCADA) ? ST_ABERTA_DESTRANCADA : ST_FECHADA_TRANCADA;
+                    state        <= ST_FECHADA_TRANCADA;
+                    state_return <= ST_FECHADA_TRANCADA;
                 end
 
                 ST_RESET_TOTAL: begin
@@ -263,9 +270,14 @@ module operacional(
                     state_timer      <= '0;
                     rst_timer        <= '0;
                     
+                    botao_interno_prev  <= 1'b0;
+                    botao_config_prev   <= 1'b0;
+                    botao_bloqueio_prev <= 1'b0;
+                    rst_prev            <= 1'b0;
+
                     sistema_inicializado <= 1'b1;
-                    state        <= (state_return == ST_ABERTA_DESTRANCADA) ? ST_ABERTA_DESTRANCADA : ST_FECHADA_TRANCADA;
-                    state_return <= (state_return == ST_ABERTA_DESTRANCADA) ? ST_ABERTA_DESTRANCADA : ST_FECHADA_TRANCADA;
+                    state        <= ST_FECHADA_TRANCADA;
+                    state_return <= ST_FECHADA_TRANCADA;
                 end
 
                 ST_FECHADA_TRANCADA: begin
@@ -468,8 +480,6 @@ module operacional(
                         end
                         else begin
                             bip         <= 1'b1;
-                            state_timer <= '0;
-                            state       <= ST_ABERTA_DESTRANCADA;
                         end
                     end
                 end
@@ -480,6 +490,7 @@ module operacional(
                     setup_on   <= 1'b1; 
                     
                     if (data_setup_ok) begin
+                        config_atual <= data_setup_new;
                         bip         <= 1'b1;
                         state_timer <= '0;
                         state       <= ST_ABERTA_DESTRANCADA;
