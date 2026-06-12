@@ -251,8 +251,8 @@ module operacional(
                     rst_prev            <= 1'b0;
                     
                     sistema_inicializado <= 1'b1;
-                    state        <= ST_FECHADA_TRANCADA;
-                    state_return <= ST_FECHADA_TRANCADA;
+                    state        <= ST_FECHADA_DESTRANCADA;
+                    state_return <= ST_FECHADA_DESTRANCADA;
                 end
 
                 ST_RESET_TOTAL: begin
@@ -276,8 +276,8 @@ module operacional(
                     rst_prev            <= 1'b0;
 
                     sistema_inicializado <= 1'b1;
-                    state        <= ST_FECHADA_TRANCADA;
-                    state_return <= ST_FECHADA_TRANCADA;
+                    state        <= ST_FECHADA_DESTRANCADA;
+                    state_return <= ST_FECHADA_DESTRANCADA;
                 end
 
                 ST_FECHADA_TRANCADA: begin
