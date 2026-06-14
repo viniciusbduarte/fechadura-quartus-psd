@@ -36,6 +36,7 @@ module operacional(
         ST_ACESSO_NEGADO,
         ST_BLOQUEADO,
         ST_TENTATIVA_LIBERADA,
+        ST_AGUARDANDO_SENHA,
         ST_AUTENTICA_CONFIG,
         ST_MODO_CONFIG,
         ST_NAO_PERTURBE,
@@ -54,6 +55,7 @@ module operacional(
     localparam int T_3S   = 3000;
     localparam int T_5S   = 5000;
     localparam int T_10S  = 10000;
+    localparam int T_15S  = 15000;
     localparam int T_60S  = 60000;
 
     // MODIFICAÇÃO 1: Inicialização explícita de registradores para o Power-Up do FPGA
@@ -67,6 +69,7 @@ module operacional(
 
     logic [2:0] cont_erros;
     logic [2:0] cont_bloqueios;
+	logic [16:0] cont_desbloqueio;
 
     logic [16:0] state_timer;
     logic [16:0] inactivity_timer;
@@ -283,6 +286,7 @@ module operacional(
                 ST_FECHADA_TRANCADA: begin
                     tranca     <= 1'b1;
                     teclado_en <= 1'b1;
+                    if (cont_desbloqueio > 0) cont_desbloqueio <= cont_desbloqueio - 1;
 
                     // MODIFICAÇÃO 2: Adicionada janela de proteção baseada em ciclos (ex: >= 50)
                     // Evita falsos alarmes causados por bouncing ou bouncing elétrico no sinal do sensor ao iniciar/resetar.
@@ -331,7 +335,7 @@ module operacional(
                             end
                             else begin
                                 bip <= 1'b1;
-                                if (cont_erros >= 3'd4) begin
+                                if (cont_erros >= 3'd5) begin
                                     cont_bloqueios   <= (cont_bloqueios < 3'd7) ? cont_bloqueios + 1'b1 : 3'd7;
                                     state_timer      <= '0;
                                     state            <= ST_BLOQUEADO;
@@ -416,14 +420,20 @@ module operacional(
 
                 ST_TENTATIVA_LIBERADA: begin
                     teclado_en <= 1'b1;
-                    bcd_pac    <= '{default: SEG_DASH};
-                    display_en <= state_timer[8]; 
-
-                    if (!sensor_contato && (state_timer >= 17'd50)) begin
-                        state_timer <= '0;
-                        state       <= ST_ALARME;
+                    
+                    if (state_timer < T_15S) begin
+                        display_en <= state_timer[8];
+                        bcd_pac    <= '{default: SEG_DASH};
+                    end else begin
+                        display_en <= 1'b0;
+                        bcd_pac    <= '{default: KEY_HASH}; 
                     end
-                    else if (inactivity_timer >= T_60S) begin
+
+                    if (state_timer >= T_15S && digitos_valid) begin
+                        state_timer <= '0;
+                    end
+
+                    if (inactivity_timer >= T_60S + ({11'b0, lockout_time_sec} * T_1S)) begin
                         cont_erros     <= '0;
                         cont_bloqueios <= '0;
                         state_timer    <= '0;
@@ -454,14 +464,36 @@ module operacional(
                             state_timer <= '0;
                         end
                         else begin
-                            bip            <= 1'b1;
-                            cont_erros     <= cont_erros + 1'b1;
-                            cont_bloqueios <= (cont_bloqueios < 3'd7) ? cont_bloqueios + 1'b1 : 3'd7;
-                            state_timer    <= '0;
-                            state          <= ST_BLOQUEADO;
+                            bip <= 1'b1;
+                            cont_erros <= cont_erros + 1'b1;
+                            if (cont_erros >= 3'd4) begin
+                                cont_bloqueios <= (cont_bloqueios < 3'd7) ? cont_bloqueios + 1'b1 : 3'd7;
+                                state_timer    <= '0;
+                                state          <= ST_BLOQUEADO;
+                            end else begin
+                                state_timer <= '0;
+                                state       <= ST_ACESSO_NEGADO;
+                            end
                         end
                     end
                 end
+				
+				ST_AGUARDANDO_SENHA: begin
+					teclado_en <= 1'b1;
+					display_en <= 1'b0;
+					if (cont_desbloqueio > 0) cont_desbloqueio <= cont_desbloqueio - 1;
+
+					if (cont_desbloqueio == 0) begin
+						cont_erros <= '0;
+						cont_bloqueios <= '0;
+						state_timer <= '0;
+						state <= ST_FECHADA_TRANCADA;
+					end
+					else if (digitos_valid) begin
+						state_timer <= '0;
+						state <= ST_TENTATIVA_LIBERADA;
+					end
+				end
 
                 ST_AUTENTICA_CONFIG: begin
                     tranca     <= 1'b0; 
