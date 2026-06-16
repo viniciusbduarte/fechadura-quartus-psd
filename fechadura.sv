@@ -22,8 +22,6 @@ module fechadura (
 //=======================================================
 //  Sinais Internos
 //=======================================================
-logic clk_1khz;
-
 bcdPac_t bcd_pac_setup, bcd_pac_op;
 digitosPac_t digitos_value;
 setupPac_t data_setup_new;
@@ -34,37 +32,30 @@ logic setup_on, digitos_valid, teclado_en, data_setup_ok, enable_display_op, ena
 //  Codificação Estrutural
 //=======================================================
 
-// Divisor de frequência para gerar o clock de 1KHz para o sistema
-divfreq div (
-    .reset(rst),
-    .clock(clk),
-    .clk_i(clk_1khz)
-);
-
 debounce debouncer_botao_interno (
-    .clk(clk_1khz),
+    .clk(clk),
     .rst(rst),
-    .button_in(botao_interno),
-    .button_out(botao_interno_db)
+    .s_in(botao_interno),
+    .s_out(botao_interno_db)
 );
 
 debounce debouncer_botao_bloqueio (
-    .clk(clk_1khz),
+    .clk(clk),
     .rst(rst),
-    .button_in(botao_bloqueio),
-    .button_out(botao_bloqueio_db)
+    .s_in(botao_bloqueio),
+    .s_out(botao_bloqueio_db)
 );
 
 debounce debouncer_botao_config (
-    .clk(clk_1khz),
+    .clk(clk),
     .rst(rst),
-    .button_in(botao_config),
-    .button_out(botao_config_db)
+    .s_in(botao_config),
+    .s_out(botao_config_db)
 );
 
 // Decodificador do teclado matricial
 decodificador_de_teclado my_teclado (
-	.clk(clk_1khz),
+	.clk(clk),
 	.rst(rst),
 	.enable(teclado_en),
 	.col_matriz(col_matriz),
@@ -75,7 +66,7 @@ decodificador_de_teclado my_teclado (
 
 // Módulo de controle do Modo Setup
 setup my_setup (
-  .clk(clk_1khz),
+  .clk(clk),
   .rst(rst),
   .setup_on(setup_on),
   .digitos_value(digitos_value),
@@ -88,7 +79,7 @@ setup my_setup (
 
 // Módulo de controle do Modo Operacional
 operacional my_operacional (
-  .clk(clk_1khz),
+  .clk(clk),
   .rst(rst),
   .sensor_contato(sensor_contato),
   .botao_interno(botao_interno_db),
@@ -108,7 +99,7 @@ operacional my_operacional (
 
 // Módulo de controle dos displays de 7 segmentos
 display my_display (
-    .clk(clk_1khz), 
+    .clk(clk), 
     .rst(rst),
     .enable_o(enable_display_op), 
     .enable_s(enable_display_setup),

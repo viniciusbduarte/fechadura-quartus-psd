@@ -248,8 +248,17 @@ module DE1_SOC_golden_top(
 //=======================================================
 //  Structural coding
 //=======================================================
+
+// Divisor de frequência para gerar o clock de 1KHz para o sistema
+divfreq div (
+    .reset(SW[9]),
+    .clock(CLOCK_50),
+    .clk_i(clk_1khz)
+);
+
+// Módulo principal do sistema de controle da fechadura eletrônica
 fechadura my_fechadura(
-    .clk(CLOCK_50),
+    .clk(clk_1khz),
     .rst(SW[9]),
     .sensor_contato(SW[0]),
     .botao_interno(!KEY[1]),
