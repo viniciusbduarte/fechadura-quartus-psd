@@ -341,7 +341,7 @@ module operacional(
                             end
                             else begin
                                 bip <= 1'b1;
-                                if (cont_erros >= 3'd5) begin
+                                if (cont_erros >= 3'd4) begin
                                     cont_bloqueios   <= (cont_bloqueios < 3'd7) ? cont_bloqueios + 1'b1 : 3'd7;
                                     state_timer      <= '0;
                                     state            <= ST_BLOQUEADO;
