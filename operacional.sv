@@ -150,6 +150,10 @@ module operacional(
     always_ff @(posedge clk) begin
         rst_prev <= rst;
 
+        if (data_setup_ok) begin
+            config_atual <= data_setup_new;
+        end
+
         // 1. GERENCIAMENTO GLOBAL DO BOTÃO DE RESET (HARDWARE)
         if (rst) begin
             if (rst_timer < 14'h3FFF) begin
@@ -190,14 +194,16 @@ module operacional(
 
             case (state)
                 ST_INIT: begin
-                    config_atual.bip_status          <= 1'b1;
-                    config_atual.bip_time            <= 6'd5;
-                    config_atual.tranca_aut_time     <= 6'd5;
-                    config_atual.senha_master.digits <= 48'hFFFFFFFF1234; 
-                    config_atual.senha_1.digits      <= {12{4'hF}};       
-                    config_atual.senha_2.digits      <= {12{4'hF}};
-                    config_atual.senha_3.digits      <= {12{4'hF}};
-                    config_atual.senha_4.digits      <= {12{4'hF}};
+                    if (!sistema_inicializado) begin
+                        config_atual.bip_status          <= 1'b1;
+                        config_atual.bip_time            <= 6'd5;
+                        config_atual.tranca_aut_time     <= 6'd5;
+                        config_atual.senha_master.digits <= 48'hFFFFFFFF1234; 
+                        config_atual.senha_1.digits      <= {12{4'hF}};       
+                        config_atual.senha_2.digits      <= {12{4'hF}};
+                        config_atual.senha_3.digits      <= {12{4'hF}};
+                        config_atual.senha_4.digits      <= {12{4'hF}};
+                    end
                     
                     cont_erros       <= '0;
                     cont_bloqueios   <= '0;
@@ -215,7 +221,7 @@ module operacional(
                     state                <= ST_FECHADA_TRANCADA;
                     state_return         <= ST_FECHADA_TRANCADA;
                 end
-
+                
                 ST_AVALIA_RESET: begin
                     state_timer <= '0;
                     hold_timer  <= '0;
