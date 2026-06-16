@@ -48,7 +48,7 @@ module operacional(
     localparam logic [3:0] EVT_TIMEOUT = 4'hE; // Estouro de tempo no teclado
     localparam logic [3:0] VAL_EMPTY   = 4'hF; // Posição vazia na memória
     localparam logic [3:0] SEG_DASH    = 4'hA; // Caractere '-' para display
-    localparam logic [3:0] VAL_VOID    = 4'hC; // Apagado / Vazio visual
+    localparam logic [3:0] VAL_VOID    = 4'hB; // Apagado / Vazio visual
 
     // Constantes de Tempo (Baseadas em ciclos de clock ou frações de milissegundos)
     localparam int T_1S   = 1000;
@@ -186,7 +186,7 @@ module operacional(
             teclado_en <= 1'b0;
             display_en <= 1'b0;
             setup_on   <= 1'b0;
-            bcd_pac    <= '0;
+            bcd_pac    <= '{default: VAL_VOID};
             bip        <= 1'b0;
 
             if (state_timer < 17'h1FFFF)       state_timer <= state_timer + 1'b1;
