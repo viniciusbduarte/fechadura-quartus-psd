@@ -1,7 +1,7 @@
-module debounce(input clock, reset, s_in, output logic s_out);
+module debounce(input clk, rst, s_in, output logic s_out);
   int cont;
-  always @(posedge clock or posedge reset) begin
-    if(reset) begin
+  always @(posedge clk or posedge rst) begin
+    if(rst) begin
       cont  = 0;
       s_out = 0;
     end

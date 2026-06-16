@@ -17,7 +17,7 @@ module segment7( bcd, seg );
 				7  : seg = 7'b1111000;
 				8  : seg = 7'b0000000;
 				9  : seg = 7'b0011000;
-				10 : seg = 7'b0001000;
+				10 : seg = 7'b1110111; //alterado para não mostrar o -, indicando as tentaivas erradas 
 				11 : seg = 7'b0000011;
 				12 : seg = 7'b1111111; //alterado para não mostrar nada, sendo usado para apagar o display
 				13 : seg = 7'b0100001;

@@ -1,0 +1,21 @@
+# Quartus II generated files and directories
+db/
+incremental_db/
+output_files/
+
+# Backup and temporary files
+*.bak
+*.qws
+*.qpg
+*.rpt
+*.sof
+*.jdi
+*.cdf
+*.done
+*.smsg
+*.sta.summary
+*.map.summary
+*.fit.summary
+*.log
+*.txt
+*~
