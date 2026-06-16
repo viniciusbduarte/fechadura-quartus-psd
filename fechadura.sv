@@ -41,6 +41,27 @@ divfreq div (
     .clk_i(clk_1khz)
 );
 
+debounce debouncer_botao_interno (
+    .clk(clk_1khz),
+    .rst(rst),
+    .button_in(botao_interno),
+    .button_out(botao_interno_db)
+);
+
+debounce debouncer_botao_bloqueio (
+    .clk(clk_1khz),
+    .rst(rst),
+    .button_in(botao_bloqueio),
+    .button_out(botao_bloqueio_db)
+);
+
+debounce debouncer_botao_config (
+    .clk(clk_1khz),
+    .rst(rst),
+    .button_in(botao_config),
+    .button_out(botao_config_db)
+);
+
 // Decodificador do teclado matricial
 decodificador_de_teclado my_teclado (
 	.clk(clk_1khz),
@@ -70,9 +91,9 @@ operacional my_operacional (
   .clk(clk_1khz),
   .rst(rst),
   .sensor_contato(sensor_contato),
-  .botao_interno(botao_interno),
-  .botao_bloqueio(botao_bloqueio),
-  .botao_config(botao_config),
+  .botao_interno(botao_interno_db),
+  .botao_bloqueio(botao_bloqueio_db),
+  .botao_config(botao_config_db),
   .data_setup_new(data_setup_new),
   .data_setup_ok(data_setup_ok),
   .digitos_value(digitos_value),
