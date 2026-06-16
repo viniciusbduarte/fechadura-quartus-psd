@@ -245,81 +245,26 @@ module DE1_SOC_golden_top(
 	`endif
 );
 
-import projeto_types::*;
-
-//=======================================================
-//  REG/WIRE declarations
-//=======================================================
-bcdPac_t bcd_pac1, bcd_pac2;
-digitosPac_t digitos_value;
-setupPac_t data_setup_new;
-
-wire clk_i, setup_on, digitos_valid, teclado_en, data_setup_ok, enable_o, enable_s;
-
 //=======================================================
 //  Structural coding
 //=======================================================
-
-divfreq  div(
-    .reset(SW[8]),
-    .clock(CLOCK_50),
-    .clk_i(clk_i)
-);
-
-display my_display (
-    .clk(clk_i), 
+fechadura my_fechadura(
+    .clk(CLOCK_50),
     .rst(SW[9]),
-    .enable_o(enable_o), 
-    .enable_s(enable_s),
-    .bcd_in_op(bcd_pac2), 
-    .bcd_in_setup(bcd_pac1),
-    .HEX0(HEX0), 
+    .sensor_contato(SW[0]),
+    .botao_interno(!KEY[1]),
+    .botao_bloqueio(!KEY[2]),
+    .botao_config(!KEY[3]),
+    .col_matriz({GPIO_0[16],GPIO_0[14],GPIO_0[12],GPIO_0[10]}),
+    .lin_matriz({GPIO_0[24],GPIO_0[22],GPIO_0[20],GPIO_0[18]}),
+    .tranca(LEDR[0]),
+    .bip(LEDR[9]),
+    .HEX0(HEX0),
     .HEX1(HEX1),
-    .HEX2(HEX2), 
-    .HEX3(HEX3), 
-    .HEX4(HEX4), 
+    .HEX2(HEX2),
+    .HEX3(HEX3),
+    .HEX4(HEX4),
     .HEX5(HEX5)
 );
-
-decodificador_de_teclado my_teclado (
-	.clk(clk_i),
-	.rst(SW[9]),
-	.enable(teclado_en),
-	.col_matriz({GPIO_0[16],GPIO_0[14],GPIO_0[12],GPIO_0[10]}),
-	.lin_matriz({GPIO_0[24],GPIO_0[22],GPIO_0[20],GPIO_0[18]}),
-	.digitos_value(digitos_value),
-	.digitos_valid(digitos_valid)
-);
-
-setup  my_setup(
-  .clk(clk_i),
-  .rst(SW[9]),
-  .setup_on(setup_on),
-  .digitos_value(digitos_value),
-  .digitos_valid(digitos_valid),
-  .display_en(enable_s),
-  .bcd_pac(bcd_pac1),       
-  .data_setup_new(data_setup_new),
-  .data_setup_ok(data_setup_ok)  
-);
-
-operacional my_operacional(
-  .clk(clk_i),
-  .rst(SW[9]),
-  .sensor_contato(SW[0]),
-  .botao_interno(!KEY[1]),
-  .botao_bloqueio(!KEY[2]),
-  .botao_config(!KEY[3]),
-  .data_setup_new(data_setup_new),
-  .data_setup_ok(data_setup_ok),
-  .digitos_value(digitos_value),
-  .digitos_valid(digitos_valid),
-  .bcd_pac(bcd_pac2),
-  .teclado_en(teclado_en),
-  .display_en(enable_o),
-  .setup_on(setup_on),
-  .tranca(LEDR[0]),
-  .bip(LEDR[9])
-);  
 
 endmodule
