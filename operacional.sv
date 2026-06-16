@@ -48,7 +48,7 @@ module operacional(
     localparam logic [3:0] EVT_TIMEOUT = 4'hE; // Estouro de tempo no teclado
     localparam logic [3:0] VAL_EMPTY   = 4'hF; // Posição vazia na memória
     localparam logic [3:0] SEG_DASH    = 4'hA; // Caractere '-' para display
-    localparam logic [3:0] VAL_VOID    = 4'hC; // Apagado / Vazio visual
+    localparam logic [3:0] VAL_VOID    = 4'hB; // Apagado / Vazio visual
 
     // Constantes de Tempo (Baseadas em ciclos de clock ou frações de milissegundos)
     localparam int T_1S   = 1000;
@@ -150,6 +150,10 @@ module operacional(
     always_ff @(posedge clk) begin
         rst_prev <= rst;
 
+        if (data_setup_ok) begin
+            config_atual <= data_setup_new;
+        end
+
         // 1. GERENCIAMENTO GLOBAL DO BOTÃO DE RESET (HARDWARE)
         if (rst) begin
             if (rst_timer < 14'h3FFF) begin
@@ -182,7 +186,7 @@ module operacional(
             teclado_en <= 1'b0;
             display_en <= 1'b0;
             setup_on   <= 1'b0;
-            bcd_pac    <= '0;
+            bcd_pac    <= '{default: VAL_VOID};
             bip        <= 1'b0;
 
             if (state_timer < 17'h1FFFF)       state_timer <= state_timer + 1'b1;
@@ -190,14 +194,16 @@ module operacional(
 
             case (state)
                 ST_INIT: begin
-                    config_atual.bip_status          <= 1'b1;
-                    config_atual.bip_time            <= 6'd5;
-                    config_atual.tranca_aut_time     <= 6'd5;
-                    config_atual.senha_master.digits <= 48'hFFFFFFFF1234; 
-                    config_atual.senha_1.digits      <= {12{4'hF}};       
-                    config_atual.senha_2.digits      <= {12{4'hF}};
-                    config_atual.senha_3.digits      <= {12{4'hF}};
-                    config_atual.senha_4.digits      <= {12{4'hF}};
+                    if (!sistema_inicializado) begin
+                        config_atual.bip_status          <= 1'b1;
+                        config_atual.bip_time            <= 6'd5;
+                        config_atual.tranca_aut_time     <= 6'd5;
+                        config_atual.senha_master.digits <= 48'hFFFFFFFF1234; 
+                        config_atual.senha_1.digits      <= {12{4'hF}};       
+                        config_atual.senha_2.digits      <= {12{4'hF}};
+                        config_atual.senha_3.digits      <= {12{4'hF}};
+                        config_atual.senha_4.digits      <= {12{4'hF}};
+                    end
                     
                     cont_erros       <= '0;
                     cont_bloqueios   <= '0;
@@ -215,7 +221,7 @@ module operacional(
                     state                <= ST_FECHADA_TRANCADA;
                     state_return         <= ST_FECHADA_TRANCADA;
                 end
-
+                
                 ST_AVALIA_RESET: begin
                     state_timer <= '0;
                     hold_timer  <= '0;
@@ -335,7 +341,7 @@ module operacional(
                             end
                             else begin
                                 bip <= 1'b1;
-                                if (cont_erros >= 3'd5) begin
+                                if (cont_erros >= 3'd4) begin
                                     cont_bloqueios   <= (cont_bloqueios < 3'd7) ? cont_bloqueios + 1'b1 : 3'd7;
                                     state_timer      <= '0;
                                     state            <= ST_BLOQUEADO;
